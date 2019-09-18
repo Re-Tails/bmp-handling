@@ -74,3 +74,12 @@ typedef struct
     BYTE rgbtRed;
 } __attribute__((__packed__))
 RGBTRIPLE;
+
+
+typedef struct
+{   
+    BITMAPFILEHEADER bitmapFileHeader;
+    BITMAPINFOHEADER bitmapInfoHeader;
+    unsigned char* image;
+}
+BMPIMAGE;
