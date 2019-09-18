@@ -14,16 +14,7 @@ int main(void)
 	if (1 == 1)
 	{
 		BMPIMAGE bitmapImage;
-		bitmapImage = LoadBMP("small_pic.bmp");
-		printf("%d\n", bitmapImage.bitmapInfoHeader.biSize);
-		printf("%d\n", bitmapImage.bitmapInfoHeader.biHeight);
-		printf("%d\n", bitmapImage.bitmapInfoHeader.biWidth);
-		printf("%d\n", bitmapImage.bitmapInfoHeader.biPlanes);
-		printf("%d\n", bitmapImage.bitmapInfoHeader.biBitCount);
-		printf("%d\n", bitmapImage.bitmapInfoHeader.biCompression);
-		printf("%d\n", bitmapImage.bitmapInfoHeader.biSizeImage);
-		printf("%s", bitmapImage.image);
-
+		bitmapImage = LoadBMP("6x6_24bit.bmp");
 		SaveBMP("SPY.BMP", bitmapImage);
 	}
 	
@@ -61,9 +52,7 @@ BMPIMAGE LoadBMP(char* filename)
 	/*Move to beginning of bits*/
 	/*fseek(BMP_p, bitmapImage->bitmapFileHeader.bfOffBits, SEEK_SET); Does not work? */
 	/*Allocate memory for the image*/
-	printf("SIZE: %d\n", bitmapImage.bitmapInfoHeader.biSizeImage);
 	bitmapImage.image = (unsigned char*) malloc(bitmapImage.bitmapInfoHeader.biSizeImage);
-	printf("test");
 	fread(bitmapImage.image, bitmapImage.bitmapInfoHeader.biSizeImage, 1, BMP_p);
 	fclose(BMP_p);
 	return bitmapImage;
@@ -77,8 +66,8 @@ void SaveBMP(char* filename, BMPIMAGE bitmapImage)
 
 	BMP_p = fopen(filename, "wb");
 
-	fwrite(&bitmapImage.bitmapFileHeader, sizeof(bitmapImage.bitmapFileHeader), 1, BMP_p);
-	fwrite(&bitmapImage.bitmapInfoHeader, sizeof(bitmapImage.bitmapInfoHeader), 1, BMP_p);
+	fwrite(&bitmapImage.bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, BMP_p);
+	fwrite(&bitmapImage.bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, BMP_p);
 	fwrite(bitmapImage.image, bitmapImage.bitmapInfoHeader.biSizeImage, 1, BMP_p);
 	
 	fclose(BMP_p);
