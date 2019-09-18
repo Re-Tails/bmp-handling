@@ -14,8 +14,16 @@ int main(void)
 	if (1 == 1)
 	{
 		BMPIMAGE bitmapImage;
-		bitmapImage = LoadBMP("MARBLES.BMP");
-		SaveBMP("SPY.BMP", &bitmapImage);
+		bitmapImage = LoadBMP("LAND.BMP");
+		printf("%d\n", bitmapImage.bitmapInfoHeader.biSize);
+		printf("%d\n", bitmapImage.bitmapInfoHeader.biHeight);
+		printf("%d\n", bitmapImage.bitmapInfoHeader.biWidth);
+		printf("%d\n", bitmapImage.bitmapInfoHeader.biPlanes);
+		printf("%d\n", bitmapImage.bitmapInfoHeader.biBitCount);
+		printf("%d\n", bitmapImage.bitmapInfoHeader.biCompression);
+		printf("%d\n", bitmapImage.bitmapInfoHeader.biSizeImage);
+
+		SaveBMP("SP2.BMP", &bitmapImage);
 	}
 	
 	return 0;
@@ -46,14 +54,19 @@ BMPIMAGE LoadBMP(char* filename)
 	{
 		printf("File does not exist\n");
 	}
+	int elements_read;
 
-	fread(&bitmapImage->bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, BMP_p);
-	fread(&bitmapImage->bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, BMP_p);
+	elements_read = fread(&bitmapImage->bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, BMP_p);
+	printf("%d\n", elements_read);
+	elements_read = fread(&bitmapImage->bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, BMP_p);
+	printf("%d\n", elements_read);
 	/*Move to beginning of bits*/
-	fseek(BMP_p, bitmapImage->bitmapFileHeader.bfOffBits, SEEK_SET);
+	/*fseek(BMP_p, bitmapImage->bitmapFileHeader.bfOffBits, SEEK_SET);*/
 	/*Allocate memory for the image*/
-	bitmapImage->image = malloc(sizeof(bitmapImage->image) * bitmapImage->bitmapInfoHeader.biSizeImage);
-	fread(&bitmapImage->image, (*bitmapImage).bitmapInfoHeader.biSizeImage, 1, BMP_p);
+	printf("SIZE: %d\n", bitmapImage->bitmapInfoHeader.biSizeImage);
+	bitmapImage->image = (unsigned char*) malloc(bitmapImage->bitmapInfoHeader.biSizeImage);
+	printf("test");
+	fread(bitmapImage->image, bitmapImage->bitmapInfoHeader.biSizeImage, 1, BMP_p);
 	fclose(BMP_p);
 	return *bitmapImage;
 }
