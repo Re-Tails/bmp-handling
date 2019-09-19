@@ -75,6 +75,7 @@ typedef struct
 } __attribute__((__packed__))
 RGBTRIPLE;
 
+
 /**
  * BMPIMAGE
  *
