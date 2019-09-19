@@ -74,3 +74,18 @@ typedef struct
     BYTE rgbtRed;
 } __attribute__((__packed__))
 RGBTRIPLE;
+
+/**
+ * BMPIMAGE
+ *
+ * The BMPIMAGE structure describes a bitmap file consists 
+ * of BITMAPFILEHEADER, BITMAPINFOHEADER and the image. 
+ *
+ */
+typedef struct
+{   
+    BITMAPFILEHEADER bitmapFileHeader;
+    BITMAPINFOHEADER bitmapInfoHeader;
+    unsigned char* image;
+}
+BMPIMAGE;
