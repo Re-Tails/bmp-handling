@@ -3,7 +3,7 @@
 #include <string.h>
 #include "bmp.h"
 
-FILE* validate(char* inName)
+int validate(char* inName)
 {
     /* open and validate FILE* input */
     FILE* inFileP = fopen(inName, "r");
