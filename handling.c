@@ -59,4 +59,7 @@ void encrypt(char* inName)
     * headers are the exact same
     * change the RGB of the pixels
     */
+
+   fread(outFileP, sizeof(BITMAPFILEHEADER), 1, inFileP);
+   fread(outFileP, sizeof(BITMAPINFOHEADER), 1, inFileP);
 }
