@@ -51,15 +51,77 @@ void encrypt(char* inName)
     if (outFileP == NULL)
     {
         fclose(inFileP);
-        fprintf(stderr, "Could not create %s.\n", strcat(outName, "_encrypted"));
+        fprintf(stderr, "Could not create %s.\n", 
+                strcat(outName, "_encrypted"));
         return 2;
     }
 
-    /* read from inFile and write to outFile 
-    * headers are the exact same
-    * change the RGB of the pixels
-    */
+    /* read inFile's BITMAPFILEHEADER */
+    BITMAPFILEHEADER bf;
+    fread(&bf, sizeof(BITMAPFILEHEADER), 1, inFileP);
 
-   fread(outFileP, sizeof(BITMAPFILEHEADER), 1, inFileP);
-   fread(outFileP, sizeof(BITMAPINFOHEADER), 1, inFileP);
+    /* read inFile's BITMAPINFOHEADER */
+    BITMAPINFOHEADER bi;
+    fread(&bi, sizeof(BITMAPINFOHEADER), 1, inFileP);
+
+    /* headers are the exact same */
+   fwrite(&bf, sizeof(BITMAPFILEHEADER), 1, outFileP);
+   fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, outFileP);
+
+    RGBTRIPLE triple;
+    int row, col;
+    int num = 0;
+    int biHeight = abs(bi.biHeight);
+    for(row = 0; row < biHeight; row++)
+    {
+        for(col = 0; col < bi.biWidth; col++)
+        {
+            fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
+            changeColour(&triple, (num * row) % 2, (num * row) % 3,
+                        num * row * col);
+            num += abs(row - col) + 1;
+            fwrite(&triple, sizeof(RGBTRIPLE), 1, outFileP);
+        }
+    }
+
+}
+
+void changeColour(RGBTRIPLE* triple, int sign, int colour, int offset)
+{
+    if (sign % 2 == 0)
+    {
+        switch(colour)
+        {
+            case 0:
+                triple->rgbtBlue = \
+                    abs(triple->rgbtBlue - offset) % 256;
+                break;
+            case 1:
+                triple->rgbtGreen = \
+                    abs(triple->rgbtBlue - offset) % 256;
+                break;
+            case 2:
+            triple->rgbtRed = \
+                    abs(triple->rgbtBlue - offset) % 256;
+                break;
+        }
+    }
+    else
+    {
+        switch(colour)
+        {
+            case 0:
+                triple->rgbtBlue = \
+                    (triple->rgbtBlue + offset) % 256;
+                break;
+            case 1:
+                triple->rgbtGreen = \
+                    (triple->rgbtBlue + offset) % 256;
+                break;
+            case 2:
+            triple->rgbtRed = \
+                    (triple->rgbtBlue + offset) % 256;
+                break;
+        }
+    } 
 }
