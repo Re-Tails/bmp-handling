@@ -83,3 +83,5 @@ typedef struct
     unsigned char* image;
 }
 BMPIMAGE;
+
+
