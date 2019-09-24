@@ -3,6 +3,16 @@
 #include <string.h>
 #include "bmp.h"
 
+#define BF_TYPE 0x4d42; /* BM stored in little-endian */
+#define BF_OFFBITS 54; /* 14 + 40 */
+#define BI_SIZE 40; /* size of BITMAPINFOHEADER */
+#define BI_BITCOUNT 24; /* 24-bit BMP */
+#define BI_COMPRESSION 0; /* uncompressed */
+
+int validate(char* inName);
+int encrypt(char* inName, int pass[]);
+void changeColour(RGBTRIPLE* triple, int sign, int colour, int offset);
+
 int validate(char* inName)
 {
     /* open and validate FILE* input */
@@ -13,11 +23,11 @@ int validate(char* inName)
         return 1;
     }
 
-    /* read inFile's BITMAPFILEHEADER */
+    /* read inFileP's BITMAPFILEHEADER */
     BITMAPFILEHEADER bf;
     fread(&bf, sizeof(BITMAPFILEHEADER), 1, inFileP);
 
-    /* read inFile's BITMAPINFOHEADER */
+    /* read inFileP's BITMAPINFOHEADER */
     BITMAPINFOHEADER bi;
     fread(&bi, sizeof(BITMAPINFOHEADER), 1, inFileP);
 
@@ -35,10 +45,9 @@ int validate(char* inName)
     fclose(inFileP);
     return 0;
 }
-
-void encrypt(char* inName)
+int encrypt(char* inName, int pass[])
 {
-    char* outName = strcat(inName, "_encrypted");
+    char* outName = "test_encrypter.bmp";
     FILE* inFileP = fopen(inName, "r");
     if (inFileP == NULL)
     {
@@ -56,11 +65,11 @@ void encrypt(char* inName)
         return 2;
     }
 
-    /* read inFile's BITMAPFILEHEADER */
+    /* read inFileP's BITMAPFILEHEADER */
     BITMAPFILEHEADER bf;
     fread(&bf, sizeof(BITMAPFILEHEADER), 1, inFileP);
 
-    /* read inFile's BITMAPINFOHEADER */
+    /* read inFileP's BITMAPINFOHEADER */
     BITMAPINFOHEADER bi;
     fread(&bi, sizeof(BITMAPINFOHEADER), 1, inFileP);
 
@@ -69,23 +78,28 @@ void encrypt(char* inName)
    fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, outFileP);
 
     RGBTRIPLE triple;
-    int row, col;
+    int row, col, pad;
     int num = 0;
     int biHeight = abs(bi.biHeight);
+    int nPad = (4 - bi.biWidth * sizeof(RGBTRIPLE)) % 4;
     for(row = 0; row < biHeight; row++)
     {
         for(col = 0; col < bi.biWidth; col++)
         {
             fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
-            changeColour(&triple, (num * row) % 2, (num * row) % 3,
-                        num * row * col);
-            num += abs(row - col) + 1;
+            num += (abs(row - col) + 1) % 50;
+            changeColour(&triple, pass[num] % 2, pass[num + 1] % 3,
+                        pass[num + 2]);
             fwrite(&triple, sizeof(RGBTRIPLE), 1, outFileP);
         }
+        fseek(inFileP, nPad, SEEK_CUR);
+        for(pad = 0; pad < nPad; pad++)
+        {
+            fputc(0x00, outFileP);
+        }
     }
-
+    return 0;
 }
-
 void changeColour(RGBTRIPLE* triple, int sign, int colour, int offset)
 {
     if (sign % 2 == 0)
@@ -95,14 +109,20 @@ void changeColour(RGBTRIPLE* triple, int sign, int colour, int offset)
             case 0:
                 triple->rgbtBlue = \
                     abs(triple->rgbtBlue - offset) % 256;
+                triple->rgbtGreen = \
+                    abs(triple->rgbtGreen + offset) % 256;
                 break;
             case 1:
                 triple->rgbtGreen = \
                     abs(triple->rgbtBlue - offset) % 256;
+                triple->rgbtRed = \
+                    abs(triple->rgbtBlue + offset) % 256;
                 break;
             case 2:
             triple->rgbtRed = \
                     abs(triple->rgbtBlue - offset) % 256;
+            triple->rgbtBlue = \
+                    abs(triple->rgbtBlue + offset) % 256;
                 break;
         }
     }
@@ -112,16 +132,26 @@ void changeColour(RGBTRIPLE* triple, int sign, int colour, int offset)
         {
             case 0:
                 triple->rgbtBlue = \
-                    (triple->rgbtBlue + offset) % 256;
+                    abs(triple->rgbtBlue + offset) % 256;
+                triple->rgbtGreen = \
+                    abs(triple->rgbtGreen - offset) % 256;
                 break;
             case 1:
                 triple->rgbtGreen = \
-                    (triple->rgbtBlue + offset) % 256;
+                    abs(triple->rgbtBlue + offset) % 256;
+                triple->rgbtRed = \
+                    abs(triple->rgbtBlue - offset) % 256;
                 break;
             case 2:
             triple->rgbtRed = \
-                    (triple->rgbtBlue + offset) % 256;
+                    abs(triple->rgbtBlue + offset) % 256;
+            triple->rgbtBlue = \
+                    abs(triple->rgbtBlue - offset) % 256;
                 break;
         }
     } 
+}
+int main(void)
+{
+    return 0;
 }
