@@ -1,0 +1,489 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include "bmp.h"
+#include <inttypes.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+struct Node_t
+{
+    int data;
+    char name[10];
+    struct Node_t* next;
+};
+
+#define BF_TYPE 0x4d42; /* BM stored in little-endian */
+#define BF_OFFBITS 54; /* 14 + 40 */
+#define BI_SIZE 40; /* size of BITMAPINFOHEADER */
+#define BI_BITCOUNT 24; /* 24-bit BMP */
+#define BI_COMPRESSION 0; /* uncompressed */
+
+typedef uint8_t  BYTE;
+typedef uint32_t DWORD;
+typedef int32_t  LONG;
+typedef uint16_t WORD;
+
+typedef struct 
+{ 
+    WORD bfType; 
+    DWORD bfSize; 
+    WORD bfReserved1; 
+    WORD bfReserved2; 
+    DWORD bfOffBits; 
+} __attribute__((__packed__)) 
+BITMAPFILEHEADER; 
+
+typedef struct
+{
+    BYTE rgbtBlue;
+    BYTE rgbtGreen;
+    BYTE rgbtRed;
+} __attribute__((__packed__))
+RGBTRIPLE;
+
+typedef struct
+{   
+    BITMAPFILEHEADER bitmapFileHeader;
+    BITMAPINFOHEADER bitmapInfoHeader;
+    unsigned char* image;
+}
+BMPIMAGE;
+
+typedef struct
+{
+    DWORD biSize; 
+    LONG biWidth; 
+    LONG biHeight; 
+    WORD biPlanes; 
+    WORD biBitCount; 
+    DWORD biCompression; 
+    DWORD biSizeImage; 
+    LONG biXPelsPerMeter; 
+    LONG biYPelsPerMeter; 
+    DWORD biClrUsed; 
+    DWORD biClrImportant; 
+} __attribute__((__packed__))
+BITMAPINFOHEADER; 
+
+void password ();
+
+void compress(char* image);
+
+void decrypt(int NumPass ,char* image);
+
+void decompress(char* image);
+
+void changeColour(RGBTRIPLE* triple, int sign, int colour, int offset);
+
+int validate(char* inName);
+
+int encrypt(char* inName, int pass[]);
+
+BMPIMAGE LoadBMP(char* filename);
+
+void SaveBMP(char* filename, BMPIMAGE bitmapImage);
+
+void FreeBMP(BMPIMAGE bitmapImage);
+
+void Save_History(struct Node_t **top, int x, char name[]);
+
+int Is_Empty(struct Node_t *top);
+
+void Pop(struct Node_t **top);
+
+void Delete_History(struct Node_t **top);
+
+void Print_History(struct Node_t *top);
+
+int main {
+	do{
+		char choice 
+		
+		int exit =0
+		
+		printf("type 1 for encryption\n\n type 2 for decryption\n\n type 3 for compression\n\n type 4 for decompresion\n\n");
+		printf("type 5 for compresion and encryption\n\n type 6 for decompresion and decryption\n\n type EXIT to exit>");
+		
+		scanf("%s", choice);
+		
+		if (choice == 1){
+			printf("option 1 encryption chosen");
+			LoadBMP(char* filename);
+			password();
+			validate(char* inName); 
+			encrypt(char* inName, int pass[]);
+			changeColour(RGBTRIPLE* triple, int sign, int colour, int offset);
+			SaveBMP(char* filename, BMPIMAGE bitmapImage);
+		}
+		else if (choice ==2){
+			printf("option 2 decryption chosen");
+			LoadBMP(char* filename);
+			password();
+			decrypt
+			SaveBMP(char* filename, BMPIMAGE bitmapImage);
+		}
+		else if (choice ==3){
+			printf("option 3 compresion chosen");
+			LoadBMP(char* filename);
+			compress
+		}
+		else if (choice ==4){
+			printf("option 4 decompresion chosen");
+			LoadBMP(char* filename);
+			decompress
+			SaveBMP(char* filename, BMPIMAGE bitmapImage);
+		}
+		else if (choice ==5){
+			printf("option 5 compresion and encryption chosen");
+			LoadBMP(char* filename);
+			password();
+			validate(char* inName);
+			encrypt(char* inName, int pass[]);
+			changeColour(RGBTRIPLE* triple, int sign, int colour, int offset);
+			compress
+		}
+		else if (choice = 6){
+			printf("option 6 decompression and decryption chosen");
+			LoadBMP(char* filename);
+			decompress
+			password();
+			validate(char* inName);
+			decrypt
+			changeColour(RGBTRIPLE* triple, int sign, int colour, int offset);
+			SaveBMP(char* filename, BMPIMAGE bitmapImage);
+		}
+		else if (choice = EXIT){
+			printf("exiting");
+			exit =1
+		}
+		else{
+			printf("invalid input");
+		}
+		
+	}while(exit != 1)
+};
+
+void password (){
+
+/*collect string from user make into numbers make 50 length through repetition
+of password */
+		char password [10];
+	
+	int NumPass[50], I, Length, error, Q;
+	
+	while (error <(Length)){
+	
+		printf("enter pasword using alphanumeric characters\n");
+		
+		scanf("%s",password);
+		
+		/*printf("Point1");*/
+		
+		Length = strlen(password) ; 	
+		
+		error = 0;
+		
+		/*printf("%d",Length);*/
+		
+		for (I=0; I<= (Length-1); I++){
+	
+			if (((password[I] >=48 && password[I] <=57) || (password[I] >=65 && password[I] <= 90) || (password[I] >= 97 && password[I] <= 122)) && (Length >3 && Length<=10)){
+				/*printf("E%d", error);*/
+				error++;
+				
+			};
+				
+		};
+		/*printf("error");*/
+		if (error != (Length)){
+		
+			printf("invalid password (cannot contain specical characters)\n");
+			
+			error=0;
+		};
+	};
+		
+		
+		I=0;
+		
+		/*printf("NUM");*/
+		for (Q=0; Q<= 50; Q++){
+			
+			NumPass[Q] = password[I];
+			
+			I++;
+			
+			if (I == Length){
+				
+				I=0;
+			};	
+			
+		};
+
+	return NumPass;
+};
+
+BMPIMAGE LoadBMP(char* filename)
+{
+	FILE *BMP_p;
+	BMPIMAGE bitmapImage;
+	/*The actual picture*/
+
+	BMP_p = fopen(filename, "rb");
+	/*Check that file exists*/
+	if (BMP_p == NULL)
+	{
+		printf("File does not exist\n");
+	}
+	
+	fread(&bitmapImage.bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, BMP_p);
+	fread(&bitmapImage.bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, BMP_p);
+	/*Move to beginning of bits*/
+	/*fseek(BMP_p, bitmapImage->bitmapFileHeader.bfOffBits, SEEK_SET); Does not work? */
+	/*Allocate memory for the image*/
+	bitmapImage.image = (unsigned char*) malloc(bitmapImage.bitmapInfoHeader.biSizeImage);
+	/*FREE MEMORY*/
+	fread(bitmapImage.image, bitmapImage.bitmapInfoHeader.biSizeImage, 1, BMP_p);
+	fclose(BMP_p);
+	return bitmapImage;
+}
+
+void SaveBMP(char* filename, BMPIMAGE bitmapImage)
+{
+	FILE *BMP_p;
+
+	BMP_p = fopen(filename, "wb");
+
+	fwrite(&bitmapImage.bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, BMP_p);
+	fwrite(&bitmapImage.bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, BMP_p);
+	fwrite(bitmapImage.image, bitmapImage.bitmapInfoHeader.biSizeImage, 1, BMP_p);
+	
+	fclose(BMP_p);
+}
+
+void FreeBMP(BMPIMAGE bitmapImage)
+{
+    free(bitmapImage.image);
+}
+
+void Save_History(struct Node_t **top, int x, char name[])
+{
+	struct Node_t* node = NULL;
+	node = (struct Node_t*) malloc(sizeof(struct Node_t));
+
+	node->data = x;
+	int i;
+	for (i = 0; i < 10; ++i)
+	{
+		if (name[i] !='.')
+		{
+			node->name[i] = name[i];
+		}
+	}
+	node->next = *top;
+	*top = node;
+} 
+
+int Is_Empty(struct Node_t *top)
+{
+	if (top == NULL)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+void Pop(struct Node_t **top)
+{
+	struct Node_t *node;
+	node = *top;
+	*top = (*top)->next;
+	free(node);
+}
+
+void Delete_History(struct Node_t **top)
+{
+	if (Is_Empty(*top) == 0)
+	{
+		Pop(top);
+		Delete_History(top);
+	}
+}
+
+void Print_History(struct Node_t *top)
+{
+	if (Is_Empty(top) == 0)
+	{
+		switch (top->data)
+        {
+            case 1: printf("Compressed ");
+                    break;
+            case 2: printf("Decompressed ");
+                    break;
+            case 3: printf("Encrypted ");
+                    break;
+            case 4: printf("Decrypted ");
+                    break;
+        }
+        printf("%s.BMP\n", top->name);
+		Print_History(top->next);
+	}
+}
+int validate(char* inName)
+{
+    /* open and validate FILE* input */
+    FILE* inFileP = fopen(inName, "r");
+    if (inFileP == NULL)
+    {
+        fprintf(stderr, "Could not open %s.\n", inName);
+        return 1;
+    }
+
+    /* read inFileP's BITMAPFILEHEADER */
+    BITMAPFILEHEADER bf;
+    fread(&bf, sizeof(BITMAPFILEHEADER), 1, inFileP);
+
+    /* read inFileP's BITMAPINFOHEADER */
+    BITMAPINFOHEADER bi;
+    fread(&bi, sizeof(BITMAPINFOHEADER), 1, inFileP);
+
+    /* check compatibility based on MS Docs */
+    if (bf.bfType != 0x4d42 || /* BM stored in little-endian */
+        bf.bfOffBits != 54 || /* 14 + 40 */
+        bi.biSize != 40 || /* size of BITMAPINFOHEADER */
+        bi.biBitCount != 24 || /* 24-bit BMP */
+        bi.biCompression != 0) /* uncompressed */
+    {
+        fclose(inFileP);
+        fprintf(stderr, "Unsupported file format.\n");
+        return 2;
+    }
+    fclose(inFileP);
+    return 0;
+}
+
+void compress(char* image){
+
+/* take image from image and compress using a compression algorithm*/
+};
+
+int encrypt(char* inName, int pass[])
+{
+    char* outName = "test_encrypter.bmp";
+    FILE* inFileP = fopen(inName, "r");
+    if (inFileP == NULL)
+    {
+        fprintf(stderr, "Could not open %s.\n", inName);
+        return 1;
+    }
+
+    /* create and validate FILE* output */
+    FILE* outFileP = fopen(outName, "w");
+    if (outFileP == NULL)
+    {
+        fclose(inFileP);
+        fprintf(stderr, "Could not create %s.\n", 
+                strcat(outName, "_encrypted"));
+        return 2;
+    }
+
+    /* read inFileP's BITMAPFILEHEADER */
+    BITMAPFILEHEADER bf;
+    fread(&bf, sizeof(BITMAPFILEHEADER), 1, inFileP);
+
+    /* read inFileP's BITMAPINFOHEADER */
+    BITMAPINFOHEADER bi;
+    fread(&bi, sizeof(BITMAPINFOHEADER), 1, inFileP);
+
+    /* headers are the exact same */
+   fwrite(&bf, sizeof(BITMAPFILEHEADER), 1, outFileP);
+   fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, outFileP);
+
+    RGBTRIPLE triple;
+    int row, col, pad;
+    int num = 0;
+    int biHeight = abs(bi.biHeight);
+    int nPad = (4 - bi.biWidth * sizeof(RGBTRIPLE)) % 4;
+    for(row = 0; row < biHeight; row++)
+    {
+        for(col = 0; col < bi.biWidth; col++)
+        {
+            fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
+            num += (abs(row - col) + 1) % 50;
+            changeColour(&triple, pass[num] % 2, pass[num + 1] % 3,
+                        pass[num + 2]);
+            fwrite(&triple, sizeof(RGBTRIPLE), 1, outFileP);
+        }
+        fseek(inFileP, nPad, SEEK_CUR);
+        for(pad = 0; pad < nPad; pad++)
+        {
+            fputc(0x00, outFileP);
+        }
+    }
+    return 0;
+}
+void changeColour(RGBTRIPLE* triple, int sign, int colour, int offset)
+{
+    if (sign % 2 == 0)
+    {
+        switch(colour)
+        {
+            case 0:
+                triple->rgbtBlue = \
+                    abs(triple->rgbtBlue - offset) % 256;
+                triple->rgbtGreen = \
+                    abs(triple->rgbtGreen + offset) % 256;
+                break;
+            case 1:
+                triple->rgbtGreen = \
+                    abs(triple->rgbtBlue - offset) % 256;
+                triple->rgbtRed = \
+                    abs(triple->rgbtBlue + offset) % 256;
+                break;
+            case 2:
+            triple->rgbtRed = \
+                    abs(triple->rgbtBlue - offset) % 256;
+            triple->rgbtBlue = \
+                    abs(triple->rgbtBlue + offset) % 256;
+                break;
+        }
+    }
+    else
+    {
+        switch(colour)
+        {
+            case 0:
+                triple->rgbtBlue = \
+                    abs(triple->rgbtBlue + offset) % 256;
+                triple->rgbtGreen = \
+                    abs(triple->rgbtGreen - offset) % 256;
+                break;
+            case 1:
+                triple->rgbtGreen = \
+                    abs(triple->rgbtBlue + offset) % 256;
+                triple->rgbtRed = \
+                    abs(triple->rgbtBlue - offset) % 256;
+                break;
+            case 2:
+            triple->rgbtRed = \
+                    abs(triple->rgbtBlue + offset) % 256;
+            triple->rgbtBlue = \
+                    abs(triple->rgbtBlue - offset) % 256;
+                break;
+        }
+    } 
+}
+
+void decrypt(int NumPass ,char* image){
+
+	/* take image and password and decrypt using num password */ 
+
+};
+
+void decompress(char* image){
+
+	/* take the image from image and decompress using the same algorithm as compress*/
+
+};
