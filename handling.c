@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/* 
+* Structure for linked list, limit on file length now, gonna fix it a bit better
 */
 struct Node_t
 {
@@ -51,11 +52,11 @@ int main(void)
 
 /*
 * Reads a BMP picture into memory
+* Can be useful if you want to perform an operation while keeping the whole file in memory
 * INPUTS:
 *	char* filename: Name of file to open
-*	BMPIMAGE: Contains all info about the picture
 * RETURNS:
-* -
+* 	BMPIMAGE: Contains all info about the picture
 * TODO:
 *	Increased robustness, error messages
 * https://en.wikipedia.org/wiki/BMP_file_format
@@ -74,10 +75,9 @@ BMPIMAGE LoadBMP(char* filename)
 		printf("File does not exist\n");
 	}
 	
+	/*Read the two headers*/
 	fread(&bitmapImage.bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, BMP_p);
 	fread(&bitmapImage.bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, BMP_p);
-	/*Move to beginning of bits*/
-	/*fseek(BMP_p, bitmapImage->bitmapFileHeader.bfOffBits, SEEK_SET); Does not work? */
 	/*Allocate memory for the image*/
 	bitmapImage.image = (unsigned char*) malloc(bitmapImage.bitmapInfoHeader.biSizeImage);
 	/*FREE MEMORY*/
@@ -86,7 +86,17 @@ BMPIMAGE LoadBMP(char* filename)
 	return bitmapImage;
 }
 
-
+/*
+* Saves a BMP picture to a file
+* Can be useful together with previous function to copy paste image
+* INPUTS:
+*	char* filename: Name of file to save to
+* 	BMPIMAGE: Contains all info about the picture
+* RETURNS:
+* TODO:
+*	Increased robustness, error messages
+* https://en.wikipedia.org/wiki/BMP_file_format
+*/
 
 void SaveBMP(char* filename, BMPIMAGE bitmapImage)
 {
@@ -102,31 +112,55 @@ void SaveBMP(char* filename, BMPIMAGE bitmapImage)
 }
 
 
+/*
+*Free up the space used by the picture, since it's a variable length
+*INPUTS:
+*	BMPIMAGE: The image to free up
+*/
+
 void FreeBMP(BMPIMAGE bitmapImage)
 {
     free(bitmapImage.image);
 }
 
 
-
+/*
+*Saves a command to the history
+*The number input represents one operation, could be done in a better way
+*INPUT:
+*	struct Node_t **: The uppermost node in the linked list
+*	int: The command that was used, 1-Compressed, 2-Decompressed, 3-Encrypted, 4-Decrypted
+*	char[]: Name of the file the operation was performed on
+*/
 void Save_History(struct Node_t **top, int x, char name[])
 {
 	struct Node_t* node = NULL;
+	/*Allocate memory*/
 	node = (struct Node_t*) malloc(sizeof(struct Node_t));
 
 	node->data = x;
 	int i;
 	for (i = 0; i < 10; ++i)
 	{
+		/*Save name before .bmp*/
 		if (name[i] !='.')
 		{
 			node->name[i] = name[i];
 		}
 	}
+	/*Make the new node point to previous top*/
 	node->next = *top;
+	/*Return the new node as top*/
 	*top = node;
 } 
 
+/*
+*Helper function to check if history is empty
+*INPUT:
+*	Node_t*: Uppermost node
+*RETURN:
+*	Int: 1 if empty, else 0
+*/
 int Is_Empty(struct Node_t *top)
 {
 	if (top == NULL)
@@ -136,6 +170,11 @@ int Is_Empty(struct Node_t *top)
 	return 0;
 }
 
+/*
+*Deletes the uppermoost node
+*INPUT:
+*	Node_t**: Pointer to upper node
+*/
 void Pop(struct Node_t **top)
 {
 	struct Node_t *node;
@@ -144,8 +183,14 @@ void Pop(struct Node_t **top)
 	free(node);
 }
 
+/*
+*Deletes all history by recursive methods
+*INPUT:
+*	Node_t**: Upper node
+*/
 void Delete_History(struct Node_t **top)
 {
+	/*If the history isn't empty, delete and call again on next node*/
 	if (Is_Empty(*top) == 0)
 	{
 		Pop(top);
@@ -153,10 +198,17 @@ void Delete_History(struct Node_t **top)
 	}
 }
 
+
+/*
+*Prints all history in the linked list, starting at latest action
+*INPUT:
+*	Node_t*: Top node
+*/
 void Print_History(struct Node_t *top)
 {
 	if (Is_Empty(top) == 0)
 	{
+		/*Depending on number saved, print which commando was used*/
 		switch (top->data)
         {
             case 1: printf("Compressed ");
@@ -168,7 +220,9 @@ void Print_History(struct Node_t *top)
             case 4: printf("Decrypted ");
                     break;
         }
+        /*Add .bmp*/
         printf("%s.BMP\n", top->name);
+        /*Call print again for the next node*/
 		Print_History(top->next);
 	}
 }
