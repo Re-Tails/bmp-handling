@@ -10,9 +10,46 @@
 #define BI_COMPRESSION 0; /* uncompressed */
 
 int validate(char* inName);
-int encrypt(char* inName, int pass[]);
-void changeColour(RGBTRIPLE* triple, int sign, int colour, int offset);
+void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset);
+void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset);
+char* encrypt(char* inName, int pass[], int length);
+char* decrypt(char* inName, int pass[], int length);
 
+/**
+ * FUNCTION:
+ * pass back file name without extension
+ * 
+ * IN:
+ * full name of the input file "example.bmp"
+ * 
+ * OUT:
+ * name of the file without the extension "example"
+ * 
+ * NOTE:
+ * need to free the strings passed back
+ * 
+ **/
+char* fileName(char* inName, int length)
+{
+    char* output = malloc(sizeof(char) * (length - 3));
+    int i;
+    for(i = 0; i < length; i++)
+    {
+        if(inName[i] == '.')
+        {
+            strncpy(output, inName, i);
+            output[i] = '\0';
+        }
+    }
+    return output;
+}
+
+/**
+ * 
+ * 
+ * 
+ * 
+ **/
 int validate(char* inName)
 {
     /* open and validate FILE* input */
@@ -45,14 +82,22 @@ int validate(char* inName)
     fclose(inFileP);
     return 0;
 }
-int encrypt(char* inName, int pass[])
+
+/**
+ * 
+ * 
+ * 
+ * 
+ **/
+char* encrypt(char* inName, int pass[], int length)
 {
-    char* outName = "test_encrypter.bmp";
+    char* outName = \
+        strcat(fileName(inName, strlen(inName) - 1), "_encrypted.bmp");
     FILE* inFileP = fopen(inName, "r");
     if (inFileP == NULL)
     {
         fprintf(stderr, "Could not open %s.\n", inName);
-        return 1;
+        return NULL;
     }
 
     /* create and validate FILE* output */
@@ -61,8 +106,8 @@ int encrypt(char* inName, int pass[])
     {
         fclose(inFileP);
         fprintf(stderr, "Could not create %s.\n", 
-                strcat(outName, "_encrypted"));
-        return 2;
+                strcat(outName, "_encrypted.bmp"));
+        return NULL;
     }
 
     /* read inFileP's BITMAPFILEHEADER */
@@ -87,9 +132,11 @@ int encrypt(char* inName, int pass[])
         for(col = 0; col < bi.biWidth; col++)
         {
             fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
-            num += (abs(row - col) + 1) % 50;
-            changeColour(&triple, pass[num] % 2, pass[num + 1] % 3,
-                        pass[num + 2]);
+            num += 1 % 50;
+            encryptColour(&triple, \
+                        pass[num % length] % 2, \
+                        pass[(num + 1) % length] % 3, \
+                        pass[(num + 2) % length]);
             fwrite(&triple, sizeof(RGBTRIPLE), 1, outFileP);
         }
         fseek(inFileP, nPad, SEEK_CUR);
@@ -98,31 +145,46 @@ int encrypt(char* inName, int pass[])
             fputc(0x00, outFileP);
         }
     }
-    return 0;
+    fclose(inFileP);
+    fclose(outFileP);
+    return outName;
 }
-void changeColour(RGBTRIPLE* triple, int sign, int colour, int offset)
+
+/**
+ * 
+ * 
+ * 
+ * 
+ **/
+void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
 {
+    BYTE* blue = &(triple->rgbtBlue);
+    BYTE* green = &(triple->rgbtGreen);
+    BYTE* red = &(triple->rgbtRed);
+    /*
+    printf("0: %d %d %d  %d\n", *blue, *green, *red, offset);
+    */
     if (sign % 2 == 0)
     {
         switch(colour)
         {
             case 0:
-                triple->rgbtBlue = \
-                    abs(triple->rgbtBlue - offset) % 256;
-                triple->rgbtGreen = \
-                    abs(triple->rgbtGreen + offset) % 256;
+                *blue = \
+                    abs(*blue - offset) % 256;
+                *green = \
+                    abs(*green + offset) % 256;
                 break;
             case 1:
-                triple->rgbtGreen = \
-                    abs(triple->rgbtBlue - offset) % 256;
-                triple->rgbtRed = \
-                    abs(triple->rgbtBlue + offset) % 256;
+                *green = \
+                    abs(*green - offset) % 256;
+                *red = \
+                    abs(*red + offset) % 256;
                 break;
             case 2:
-            triple->rgbtRed = \
-                    abs(triple->rgbtBlue - offset) % 256;
-            triple->rgbtBlue = \
-                    abs(triple->rgbtBlue + offset) % 256;
+                *red = \
+                    abs(*red - offset) % 256;
+                *blue = \
+                    abs(*blue + offset) % 256;
                 break;
         }
     }
@@ -131,27 +193,190 @@ void changeColour(RGBTRIPLE* triple, int sign, int colour, int offset)
         switch(colour)
         {
             case 0:
-                triple->rgbtBlue = \
-                    abs(triple->rgbtBlue + offset) % 256;
-                triple->rgbtGreen = \
-                    abs(triple->rgbtGreen - offset) % 256;
+                *blue = \
+                    abs(*blue + offset) % 256;
+                *green = \
+                    abs(*green - offset) % 256;
                 break;
             case 1:
-                triple->rgbtGreen = \
-                    abs(triple->rgbtBlue + offset) % 256;
-                triple->rgbtRed = \
-                    abs(triple->rgbtBlue - offset) % 256;
+                /* printf("#: %d %d %d  %d\n", *blue, *green, *red, offset); */
+                *green = \
+                    abs(*green + offset) % 256;
+                *red = \
+                    abs(*red - offset) % 256;
+                /* printf("1: %d %d %d  %d\n", *blue, *green, *red, offset); */
                 break;
             case 2:
-            triple->rgbtRed = \
-                    abs(triple->rgbtBlue + offset) % 256;
-            triple->rgbtBlue = \
-                    abs(triple->rgbtBlue - offset) % 256;
+                *red = \
+                    abs(*red + offset) % 256;
+                *blue = \
+                    abs(*blue - offset) % 256;
                 break;
         }
-    } 
+    }
+    /* printf("1: %d %d %d  %d\n", *blue, *green, *red, offset); */
 }
+
+/**
+ * 
+ * 
+ * 
+ * 
+ **/
+char* decrypt(char* inName, int pass[], int length)
+{
+    char* decryptedName = \
+        strcat(fileName(inName, strlen(inName)), "_decrypted.bmp");
+    FILE* inFileP = fopen(inName, "r");
+    if (inFileP == NULL)
+    {
+        fprintf(stderr, "Could not open %s.\n", inName);
+        return NULL;
+    }
+
+    /* create and validate FILE* output */
+    FILE* outFileP = fopen(decryptedName, "w");
+    if (outFileP == NULL)
+    {
+        fclose(inFileP);
+        fprintf(stderr, "Could not create %s.\n", 
+                strcat(decryptedName, "_decrypted"));
+        return NULL;
+    }
+
+    /* read inFileP's BITMAPFILEHEADER */
+    BITMAPFILEHEADER bf;
+    fread(&bf, sizeof(BITMAPFILEHEADER), 1, inFileP);
+    /* read inFileP's BITMAPINFOHEADER */
+    BITMAPINFOHEADER bi;
+    fread(&bi, sizeof(BITMAPINFOHEADER), 1, inFileP);
+    /* headers are the exact same */
+    fwrite(&bf, sizeof(BITMAPFILEHEADER), 1, outFileP);
+    fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, outFileP);
+
+    RGBTRIPLE triple;
+    int row, col, pad;
+    int num = 0;
+    int biHeight = abs(bi.biHeight);
+    int nPad = (4 - bi.biWidth * sizeof(RGBTRIPLE)) % 4;
+    for(row = 0; row < biHeight; row++)
+    {
+        for(col = 0; col < bi.biWidth; col++)
+        {
+            fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
+            num += 1 % 50;
+            decryptColour(&triple, \
+                        pass[num % length] % 2, \
+                        pass[(num + 1) % length] % 3, \
+                        pass[(num + 2) % length]);
+            fwrite(&triple, sizeof(RGBTRIPLE), 1, outFileP);
+        }
+        fseek(inFileP, nPad, SEEK_CUR);
+        for(pad = 0; pad < nPad; pad++)
+        {
+            fputc(0x00, outFileP);
+        }
+    }
+    fclose(inFileP);
+    fclose(outFileP);
+    return decryptedName;
+}
+
+void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
+{
+    BYTE* blue = &(triple->rgbtBlue);
+    BYTE* green = &(triple->rgbtGreen);
+    BYTE* red = &(triple->rgbtRed);
+    
+    printf("m: %d %d %d  %d\n", *blue, *green, *red, offset);
+    
+    if (sign % 2 == 0)
+    {
+        switch(colour)
+        {
+            case 0:
+                if(offset < *blue)
+                    *blue = (*blue + offset) % 256;
+                else
+                    *blue = abs(*blue - offset) % 256;
+                if(*green - offset > 0)
+                    *green = (*green - offset) % 256;
+                else
+                    *green = abs(*green - offset + 256) % 256;
+                
+                break;
+            case 1:
+                if(offset < *green)
+                    *green = (*green + offset) % 256;
+                else
+                    *green = abs(*green - offset) % 256;
+                if(*red - offset > 0)
+                    *red = (*red - offset) % 256;
+                else
+                    *red = abs(*red - offset + 256) % 256;
+                
+                break;
+            case 2:
+                if(offset < *red)
+                    *red = (*red + offset) % 256;
+                else
+                    *red = abs(*red - offset) % 256;
+                if(*blue - offset > 0)
+                    *blue = (*blue - offset) % 256;
+                else
+                    *blue = abs(*blue - offset + 256) % 256;
+                
+                break;
+        }
+    }
+    else
+    {
+        switch(colour)
+        {
+            case 0:
+                if(offset < *green)
+                    *green = (*green + offset) % 256;
+                else
+                    *green = abs(*green - offset) % 256;
+                if(*blue - offset > 0)
+                    *blue = (*blue - offset) % 256;
+                else
+                    *blue = abs(*blue - offset + 256) % 256;
+                break;
+            case 1:
+                if(offset < *red)
+                {
+                    *red = (*red + offset) % 256;
+                }
+                else
+                {
+                    *red = abs(*red - offset) % 256;
+                }
+                if(*green - offset > 0)
+                    *green = (*green - offset) % 256;
+                else
+                    *green = abs(*green - offset + 256) % 256;
+                break;
+            case 2:
+                if(offset < *blue)
+                    *blue = (*blue + offset) % 256;
+                else
+                    *blue = abs(*blue - offset) % 256;
+                if(*red - offset > 0)
+                    *red = (*red - offset) % 256;
+                else
+                    *red = abs(*red - offset + 256) % 256;
+                break;
+        }
+    }
+    printf("f: %d %d %d  %d\n", *blue, *green, *red, offset);
+}
+
 int main(void)
 {
+    int password[] = {1,2,3,4,5};
+    validate("index.bmp");
+    encrypt("index.bmp", password, 5);
+    decrypt("index_encrypted.bmp", password, 5);
     return 0;
 }
