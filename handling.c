@@ -132,7 +132,7 @@ char* encrypt(char* inName, int pass[], int length)
         for(col = 0; col < bi.biWidth; col++)
         {
             fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
-            num += 1 % 50;
+            num += (col + row) % 50;
             encryptColour(&triple, \
                         pass[num % length] % 2, \
                         pass[(num + 1) % length] % 3, \
@@ -264,7 +264,7 @@ char* decrypt(char* inName, int pass[], int length)
         for(col = 0; col < bi.biWidth; col++)
         {
             fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
-            num += 1 % 50;
+            num += (col + row) % 50;
             decryptColour(&triple, \
                         pass[num % length] % 2, \
                         pass[(num + 1) % length] % 3, \
@@ -287,9 +287,9 @@ void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
     BYTE* blue = &(triple->rgbtBlue);
     BYTE* green = &(triple->rgbtGreen);
     BYTE* red = &(triple->rgbtRed);
-    
+    /*
     printf("m: %d %d %d  %d\n", *blue, *green, *red, offset);
-    
+    */
     if (sign % 2 == 0)
     {
         switch(colour)
@@ -369,12 +369,14 @@ void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
                 break;
         }
     }
+    /*
     printf("f: %d %d %d  %d\n", *blue, *green, *red, offset);
+    */
 }
 
 int main(void)
 {
-    int password[] = {1,2,3,4,5};
+    int password[] = {100,200,200,200,200};
     validate("index.bmp");
     encrypt("index.bmp", password, 5);
     decrypt("index_encrypted.bmp", password, 5);
