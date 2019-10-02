@@ -1,68 +1,103 @@
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
-#include <inttypes.h>
-#include "bmp.h"
-
-/* Miscellaneous Variables */
-int i, j, k;
-
-/* Reading the BMP File */
-FILE* inImgFile;
-FILE* outImgFile;
+#include <math.h>
 
 /* Stores pixel value for uncompressed image */
-typedef struct __attribute__((__packed__)) {
+typedef struct __attribute__((__packed__))
+{
     unsigned char  b;
     unsigned char  g;
-    unsigned char  r; 
+    unsigned char  r;
 } ImageRGBPixel;
 
 /* Stores pixel value for compressed image */
-typedef struct __attribute__((__packed__)) {
+typedef struct __attribute__((__packed__))
+{
     unsigned char  runValue;
     unsigned char  b;
     unsigned char  g;
     unsigned char  r;
 } CompressedRGBPixel;
 
+/* Stores image header */
+typedef struct __attribute__((__packed__))
+{
+    unsigned char id[2];
+    unsigned int bmpSize;
+    unsigned char reserved[4];
+    unsigned int bmpDataOff;
+    unsigned int headerSize;
+    unsigned int width;
+    unsigned int height;
+    unsigned short nColorPlanes;
+    unsigned short bpp;
+    unsigned int compression;
+    unsigned int imageSize;
+    unsigned int xRes;
+    unsigned int yRes;
+    unsigned int nColors;
+    unsigned int nImportantColors;
+} BMPHeader;
+
 /* Compression and Decompression Function */
-void runLengthEncoding();
-void runLengthDecoding();
+void runLengthEncoding(char inFileName[], char outFileName[]);
+void runLengthDecoding(char inFileName[], char outFileName[]);
 
 int main()
 {
-    runLengthEncoding();
-    runLengthDecoding();
-    getchar();
+    runLengthEncoding("Input_Image.bmp", "Output_Image");
+    runLengthDecoding("Output_Image", "Reconstructed_Image.bmp");
+    /* getchar(); */
     return 0;
 }
 
-void runLengthEncoding()
+void writeCompressedPixel(FILE* filePointer, unsigned char r, unsigned char g, unsigned char b, unsigned char count)
 {
-    char inFileName[] = "Input_Image.bmp"; /*Change this to change input file name */
-    char outFileName[] = "Output_Image.bmp"; /*Change this to change output file name*/
+    CompressedRGBPixel temp;
+    temp.r = r;
+    temp.g = g;
+    temp.b = b;
+    temp.runValue = count;
 
+    fwrite(&temp,sizeof(CompressedRGBPixel),1, filePointer);
+}
+
+void printMetaData(BMPHeader header)
+{
+    printf("BMP Id: %c%c \n", header.id[0], header.id[1]);
+    printf("BMP File Size: %u bytes\n", header.bmpSize);
+    printf("Reserved: %x%x%x%x bytes\n", header.reserved[0], header.reserved[1], header.reserved[2], header.reserved[3]);
+    printf("BMP Data Offset: %u\n", header.bmpDataOff);
+    printf("Header Size: %u\n", header.headerSize);
+    printf("width: %u\n", header.width);
+    printf("height: %u\n", header.height);
+    printf("Color planes: %u\n", header.nColorPlanes);
+    printf("Bits per pixel: %u\n", header.bpp);
+    printf("Compression: %u\n", header.compression);
+    printf("Image Size: %u\n", header.imageSize);
+    printf("X Resolution: %u\n", header.xRes);
+    printf("Y Resolution: %u\n", header.yRes);
+    printf("N Colors: %u\n", header.nColors);
+    printf("N Important Colors: %u\n", header.nImportantColors);
+}
+
+void runLengthEncoding(char inFileName[], char outFileName[])
+{
+    int i;
+    int j;
     /* Header Variables */
-    uint32_t total=0;
-    uint16_t bpp, offset=0, nColorPlanes;
-    uint8_t id[2];
-    uint8_t reserved[4];
-    uint32_t bmpSize=0, bmpDataOff=0, width, height, headerSize, compression, imageSize,xRes, yRes,nColors,nImportantColors;
-    int numBytes = 0;
+    BMPHeader header;
 
     /* For debugging */
-    bool FailStatus = false;
+    int FailStatus = 0;
 
     /* File Handlers */
     ImageRGBPixel **image;
-    CompressedRGBPixel **compressedImage;
 
     /* Reading file and checking header details */
-    inImgFile = fopen(inFileName, "rb");
-    outImgFile = fopen(outFileName, "wb");
+    FILE* inImgFile = fopen(inFileName, "rb");
+    FILE* outImgFile = fopen(outFileName, "wb");
     if (inImgFile == NULL || outImgFile == NULL)
     {
         printf("Error Opening File!!");
@@ -71,210 +106,198 @@ void runLengthEncoding()
     else
     {
         /* Reading the file */
-        offset = 0;
-        fseek(inImgFile, offset, SEEK_SET);
-        fread(&id, 1, 2, inImgFile);
-        printf("BMP Id: %c%c \n",id[0],id[1]);
+        fseek(inImgFile, 0, SEEK_SET);
+        fread(&header, sizeof(BMPHeader), 1, inImgFile);
 
-        /*  Getting size of BMP File by setting offset to 2 */
-        offset = 2;
-        fseek(inImgFile, offset, SEEK_SET);
-        fread(&bmpSize, 4, 1, inImgFile);
-        printf("BMP File Size: %u bytes\n",bmpSize);
+        for(i = 0; i < sizeof(BMPHeader); i++)
+        {
+            printf("%x ", *(&(header.id[0])+i) & 0xff);
+        }
 
-        /* Getting reserved bits */
-        offset = 6;
-        fseek(inImgFile, offset, SEEK_SET);
-        fread(&reserved, 1, 4, inImgFile);
-        printf("Reserved: %x%x%x%x bytes\n",reserved[0],reserved[1],reserved[2],reserved[3]);
-
-        /* Getting bitmap data offset */
-        offset = 10;
-        fseek(inImgFile, offset, SEEK_SET);
-        fread(&bmpDataOff, 4, 1, inImgFile);
-        printf("BMP Data Offset: %u\n",bmpDataOff);
-
-        /*  Getting header size */
-        offset = 14;
-        fseek(inImgFile, offset, SEEK_SET);
-        fread(&headerSize, 4, 1, inImgFile);
-        printf("Header Size: %u\n",headerSize);
-
-        /* Using offset of 18 and 22 getting height and width of image */
-        fseek(inImgFile, 18, SEEK_SET);
-        fread(&width, 4, 1, inImgFile);
-        fread(&height, 4, 1, inImgFile);
-        printf("width: %u\n",width);
-        printf("height: %u\n",height);
-
-        /* Getting number of Color Planes */
-        offset = 26;
-        fseek(inImgFile, offset, SEEK_SET);
-        fread(&nColorPlanes, 2, 1, inImgFile);
-
-        /* Number of bits per pixel */
-        offset=28;
-        fseek(inImgFile, offset, SEEK_CUR);
-        fread(&bpp, 2, 1, inImgFile);
-
-        /* Compression Method */
-        offset=30;
-        fseek(inImgFile, offset, SEEK_CUR);
-        fread(&compression, 4, 1, inImgFile);
-
-        /* Image Size */
-        offset=34;
-        fseek(inImgFile, offset, SEEK_CUR);
-        fread(&imageSize, 4, 1, inImgFile);
-
-        /* X Resolution */
-        offset=38;
-        fseek(inImgFile, offset, SEEK_CUR);
-        fread(&xRes, 4, 1, inImgFile);
-
-        /* Y Resolution */
-        offset=42;
-        fseek(inImgFile, offset, SEEK_CUR);
-        fread(&yRes, 4, 1, inImgFile);
-
-        /* N Colors */
-        offset=46;
-        fseek(inImgFile, offset, SEEK_CUR);
-        fread(&nColors, 4, 1, inImgFile);
-
-        /* N Important Colors */
-        offset=50;
-        fseek(inImgFile, offset, SEEK_CUR);
-        fread(&nImportantColors, 4, 1, inImgFile);
+        printf("\n");
+        printMetaData(header);
 
         /* Calculating total number of bytes in Image Pixel Array */
-        numBytes = (bmpSize - bmpDataOff) / 3;
-        printf("Number of Bytes Before Compression: %d\n",numBytes);
+        printf("Number of Bytes Before Compression: %u\n", header.height*header.width*3);
 
         /* Setting offset to start of pixel data */
-        fseek(inImgFile, bmpDataOff, SEEK_SET);
+        fseek(inImgFile, header.bmpDataOff, SEEK_SET);
 
        /* Allocating memory to image array as per the loaded image */
-        image = (ImageRGBPixel**)malloc(height * sizeof(ImageRGBPixel*));
+        image = (ImageRGBPixel**)malloc(header.height * sizeof(ImageRGBPixel*));
         if (!image)
         {
             printf("Error while allocating memory\n");
         }
         else
         {
-            for (i = 0; i < height; i++)
+            for (i = 0; i < header.height; i++)
             {
-                image[i] = (ImageRGBPixel*)malloc(width * sizeof(ImageRGBPixel));
+                image[i] = (ImageRGBPixel*)malloc(header.width * sizeof(ImageRGBPixel));
                 if (!image[i])
                 {
                     printf("Error while allocating memory\n");
-                    FailStatus=true;
+                    FailStatus=1;
                 }
             }
         }
-        /* For debugging purposes
+
+        /* For debugging purposes */
         if(!FailStatus)
         {
            printf("Successful memory allocation\n");
-        } */
-        for (i = height-1; i >= 0; i--)
+        }
+
+        /* Read image pixels */
+        unsigned char padding = (((header.width * 3) % 4) == 0) ? 0 : 4- ((header.width * 3) % 4);
+
+        for (i = header.height-1; i >= 0; i--)
         {
-            for (j = 0; j < width; j++)
+            for (j = 0; j < header.width; j++)
             {
                 fread(&image[i][j], sizeof(unsigned char), sizeof(ImageRGBPixel), inImgFile);
             }
+            fseek(inImgFile, padding, SEEK_CUR);
         }
 
         /* Run Length Encoding Algorithm */
+        fseek(outImgFile, sizeof(BMPHeader) + sizeof(unsigned int), SEEK_SET);
+        ImageRGBPixel current;
+        current.r = 0;
+        current.g = 0;
+        current.b = 0;
+        unsigned int pixel_count = 0;
+        unsigned int colorCount = 0;
 
-        compressedImage = (CompressedRGBPixel**)malloc(height * sizeof(CompressedRGBPixel*));
-        for (i = 0; i < height; i++)
+        for (i = 0; i < header.height; i++)
         {
-            compressedImage[i] = (CompressedRGBPixel*)malloc((width*2) * sizeof(CompressedRGBPixel));
-        }
-
-        int runLen=0;
-
-        for (i = 0; i < height; i++)
-        {
-            k=0;
-            for (j = 0; j < width; j++)
+            for (j = 0; j < header.width; j++)
             {
-                compressedImage[i][k].r=image[i][j].r;
-                compressedImage[i][k].g=image[i][j].g;
-                compressedImage[i][k].b=image[i][j].b;
-                runLen=1;
-                total++;
-                while((j+1) < width)
+                if (i == 0 && j == 0)
                 {
-                    if((image[i][j].r == image[i][j+1].r) &&
-                      (image[i][j].g == image[i][j+1].g) &&
-                      (image[i][j].b == image[i][j+1].b))
-                    {
-                        runLen++;
-                        j++;
-                    }
-                    else
-                    {
-                        break;
-                    }
+                        current = image[i][j];
+                        pixel_count = 1;
+                        colorCount = 1;
                 }
-                compressedImage[i][k++].runValue=runLen;
+                else if ((image[i][j].r == current.r) && (image[i][j].g == current.g) && (image[i][j].b == current.b))
+                {
+                    pixel_count++;
+                }
+                else
+                {
+                    writeCompressedPixel(outImgFile, current.r, current.g, current.b, pixel_count);
+                    pixel_count = 1;
+                    colorCount++;
+                    current = image[i][j];
+                }
+
+                if (i == header.height - 1 && j == header.width -1)
+                {
+                    writeCompressedPixel(outImgFile, current.r, current.g, current.b, pixel_count);
+                }
             }
         }
-        printf("Total Bytes After Compression: %u\n",total);
-        printf("Compression ratio = %f%%\n", 100.0 - (bmpDataOff + total) * 100.0 / bmpSize);
 
-        bmpSize=total+bmpDataOff;
-        printf("Size after compression: %u \n", bmpSize);
-        compression=0x0001;
-        char header[40];
-        sprintf(header,"%c%c%u%c%c%c%c%u%u%u%u%"PRIu16"%"PRIu16"%u%u%u%u%u%u",
-                id[0],id[1],bmpSize,reserved[0],reserved[1],reserved[2],reserved[3],
-                bmpDataOff,headerSize,width,height,nColorPlanes,bpp,compression,imageSize,
-                xRes,yRes,nColors,nImportantColors
-                );
-        printf(header);
-        /* Writing the file */
-        fwrite(header,sizeof(header)-1, 1, outImgFile);
-        fwrite(compressedImage,sizeof(compressedImage),total, outImgFile);
+        printf("Size after compression: %u \n", colorCount*4);
+        printf("Compression percentage: %f\n", 100.0*(colorCount*4)/(header.height*header.width*3));
+
+        fseek(outImgFile, 0, SEEK_SET);
+        fwrite(&header, sizeof(BMPHeader), 1, outImgFile);
+        fwrite(&colorCount, 4, 1, outImgFile);
+
         /* ------- */
-
 
         /* Freeing data and closing files */
         if(image) free(image);
-        if(compressedImage) free(compressedImage);
         fclose(inImgFile);
         fclose(outImgFile);
     }
     printf("\nCompression Complete!!!\n");
 }
 
-void runLengthDecoding()
+void runLengthDecoding(char inFileName[], char outFileName[])
 {
-    char inFileName[] = "Output_Image.bmp"; /*Change this to change input file name */
-    char outFileName[] = "Reconstructed_Image.bmp"; /*Change this to change output file name */
     /* Header Variables */
-    uint32_t total=0;
-    uint16_t bpp, offset=0, nColorPlanes;
-    uint8_t id[2];
-    uint8_t reserved[4];
-    uint32_t bmpSize=0, bmpDataOff=0, width, height, headerSize, compression, imageSize,xRes, yRes,nColors,nImportantColors;
-    int numBytes = 0;
+    int i;
+    int j;
+    BMPHeader header;
+    unsigned int colorCount;
 
     /* For debugging */
-    bool FailStatus = false;
+    int FailStatus = 0;
 
     /*File Handlers */
-   /*  ImageRGBPixel **reconstructedImage; */
-    CompressedRGBPixel **compressedImage;
+    ImageRGBPixel *compressedImage;
 
     /* Reading file and checking header details */
-    inImgFile = fopen(inFileName, "rb");
-    outImgFile = fopen(outFileName, "wb");
+    FILE* inImgFile = fopen(inFileName, "rb");
+    FILE* outImgFile = fopen(outFileName, "wb");
     if (inImgFile == NULL || outImgFile == NULL)
     {
         printf("Error Opening File!!");
         exit(1);
     }
+    else
+    {
+        /* Reading the file */
+        fseek(inImgFile, 0, SEEK_SET);
+        fread(&header, sizeof(BMPHeader), 1, inImgFile);
+
+        printMetaData(header);
+
+        fseek(inImgFile, sizeof(BMPHeader), SEEK_SET);
+        fread(&colorCount, sizeof(unsigned int), 1, inImgFile);
+        printf("Color Count: %u\n", colorCount);
+
+       /* Allocating memory to image array as per the loaded image */
+        compressedImage = (ImageRGBPixel*)malloc(header.width*header.height * sizeof(ImageRGBPixel));
+        if (!compressedImage)
+        {
+            printf("Error while allocating memory\n");
+            FailStatus = 1;
+        }
+
+        /* For debugging purposes */
+        if(!FailStatus)
+        {
+           printf("Successful memory allocation\n");
+        }
+
+        /* Read image pixels */
+        unsigned int pixel_index = 0;
+        for (i = 0; i < colorCount; i++)
+        {
+            CompressedRGBPixel temp_compressed;
+            fread(&temp_compressed, sizeof(unsigned char), sizeof(CompressedRGBPixel), inImgFile);
+
+            for (j = 0; j < temp_compressed.runValue; j++)
+            {
+                compressedImage[pixel_index].r = temp_compressed.r;
+                compressedImage[pixel_index].g = temp_compressed.g;
+                compressedImage[pixel_index].b = temp_compressed.b;
+                pixel_index++;
+            }
+        }
+
+        fwrite(&header, sizeof(BMPHeader), 1, outImgFile);
+
+        unsigned char pad = 0;
+        unsigned char padding = (((header.width * 3) % 4) == 0) ? 0 : 4- ((header.width * 3) % 4);
+        for (i = header.height-1; i >= 0; i--)
+        {
+            for (j = 0; j < header.width; j++)
+            {
+                fwrite(&compressedImage[(i*header.width)+j], sizeof(unsigned char), sizeof(ImageRGBPixel), outImgFile);
+            }
+            for (j = 0; j < padding; j++) {
+                fwrite(&pad, sizeof(unsigned char), 1, outImgFile);
+            }
+        }
+
+        /* Freeing data and closing files */
+        if(compressedImage) free(compressedImage);
+        fclose(inImgFile);
+        fclose(outImgFile);
+    }
+    printf("\nDecompression Complete!!!\n");
 }
