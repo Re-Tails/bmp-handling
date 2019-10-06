@@ -20,9 +20,8 @@ int Is_Empty(struct Node_t *top);
 void Pop(struct Node_t **top);
 void Delete_History(struct Node_t **top);
 void Print_History(struct Node_t *top);
-
-
-
+void Print_Node(struct Node_t *top);
+void Search_Action(struct Node_t *top, int Search_Number);
 
 
 
@@ -34,7 +33,10 @@ int main(void)
 	Save_History(&top, 4, "test.bmp");
 	Save_History(&top, 2, "hello.bmp");
 	Save_History(&top, 3, "why.bmp");
+	Save_History(&top, 4, "test2.bmp");
 	Print_History(top);
+	printf("------------------\n");
+	Search_Action(top, 4);
 	Delete_History(&top);
 
 
@@ -208,21 +210,43 @@ void Print_History(struct Node_t *top)
 {
 	if (Is_Empty(top) == 0)
 	{
-		/*Depending on number saved, print which commando was used*/
-		switch (top->data)
-        {
-            case 1: printf("Compressed ");
-                    break;
-            case 2: printf("Decompressed ");
-                    break;
-            case 3: printf("Encrypted ");
-                    break;
-            case 4: printf("Decrypted ");
-                    break;
+		Print_Node(top);
+        /*Call print again for the next node*/
+		Print_History(top->next);
+	}
+}
+
+/*
+*Prints a single node
+*INPUT:
+*	Node_t*: The node
+*/
+void Print_Node(struct Node_t *top)
+{
+	/*Depending on number saved, print which commando was used*/
+	switch (top->data)
+	{
+        case 1: printf("Compressed ");
+                break;
+        case 2: printf("Decompressed ");
+                break;
+        case 3: printf("Encrypted ");
+                break;
+        case 4: printf("Decrypted ");
+                break;
         }
         /*Add .bmp*/
         printf("%s.BMP\n", top->name);
-        /*Call print again for the next node*/
-		Print_History(top->next);
+}
+
+void Search_Action(struct Node_t *top, int Search_Number)
+{
+	if (Is_Empty(top) == 0)
+	{
+		if (top->data == Search_Number)
+		{
+			Print_Node(top);
+		}
+		Search_Action(top->next, Search_Number);
 	}
 }
