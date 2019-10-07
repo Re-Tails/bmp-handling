@@ -10,10 +10,12 @@
 #define BI_COMPRESSION 0; /* uncompressed */
 
 int validate(char* inName);
-void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset);
-void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset);
-char* encrypt(char* inName, int pass[], int length);
-char* decrypt(char* inName, int pass[], int length);
+void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
+                    int debug);
+void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
+                    int debug);
+char* encrypt(char* inName, int pass[], int length, int debug);
+char* decrypt(char* inName, int pass[], int length, int debug);
 
 /**
  * FUNCTION:
@@ -98,12 +100,13 @@ int validate(char* inName)
  * char* inName: filename to encrypt
  * int pass[]: password to use
  * int length: length of password
+ * int debug: 1 enable; 0 disable
  * 
  * OUT:
  * char*: name of the encrypted file
  * 
  **/
-char* encrypt(char* inName, int pass[], int length)
+char* encrypt(char* inName, int pass[], int length, int debug)
 {
     char* outName = \
         strcat(fileName(inName, strlen(inName) - 1), "_encrypted.bmp");
@@ -150,7 +153,8 @@ char* encrypt(char* inName, int pass[], int length)
             encryptColour(&triple, \
                         pass[num % length] % 2, \
                         pass[(num + 1) % length] % 3, \
-                        pass[(num + 2) % length]);
+                        pass[(num + 2) % length], \
+                        debug);
             fwrite(&triple, sizeof(RGBTRIPLE), 1, outFileP);
         }
         fseek(inFileP, nPad, SEEK_CUR);
@@ -172,19 +176,21 @@ char* encrypt(char* inName, int pass[], int length)
  * int sign: uses + or -
  * int colour: the colour value that will not change
  * int offset: offset to be changed
+ * int debug: 1 enable; 0 disable
  * 
  * OUT:
  * none
  * 
  **/
-void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
+void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
+                    int debug)
 {
     BYTE* blue = &(triple->rgbtBlue);
     BYTE* green = &(triple->rgbtGreen);
     BYTE* red = &(triple->rgbtRed);
-    /*
-    printf("0: %d %d %d  %d\n", *blue, *green, *red, offset);
-    */
+    if(debug)
+        printf("0: %d %d %d  %d\n", *blue, *green, *red, offset);
+
     if (sign % 2 == 0)
     {
         switch(colour)
@@ -235,7 +241,8 @@ void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
                 break;
         }
     }
-    /* printf("1: %d %d %d  %d\n", *blue, *green, *red, offset); */
+    if(debug)
+        printf("1: %d %d %d  %d\n", *blue, *green, *red, offset);
 }
 
 /**
@@ -245,6 +252,7 @@ void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
  * char* inName: filename to decrypt
  * int pass[]: password to use
  * int length: length of password
+ * int debug: 1 enable; 0 disable
  * 
  * OUT:
  * char*: name of the decrypted file
@@ -252,7 +260,7 @@ void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
  * 
  * 
  **/
-char* decrypt(char* inName, int pass[], int length)
+char* decrypt(char* inName, int pass[], int length, int debug)
 {
     char* decryptedName = \
         strcat(fileName(inName, strlen(inName)), "_decrypted.bmp");
@@ -297,7 +305,8 @@ char* decrypt(char* inName, int pass[], int length)
             decryptColour(&triple, \
                         pass[num % length] % 2, \
                         pass[(num + 1) % length] % 3, \
-                        pass[(num + 2) % length]);
+                        pass[(num + 2) % length], \
+                        debug);
             fwrite(&triple, sizeof(RGBTRIPLE), 1, outFileP);
         }
         fseek(inFileP, nPad, SEEK_CUR);
@@ -319,19 +328,20 @@ char* decrypt(char* inName, int pass[], int length)
  * int sign: uses + or -
  * int colour: the colour value that will not change
  * int offset: offset to be changed
+ * int debug: 1 enable; 0 disable
  * 
  * OUT:
  * none
  * 
  **/
-void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
+void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
+                    int debug)
 {
     BYTE* blue = &(triple->rgbtBlue);
     BYTE* green = &(triple->rgbtGreen);
     BYTE* red = &(triple->rgbtRed);
-    /*
-    printf("m: %d %d %d  %d\n", *blue, *green, *red, offset);
-    */
+    if(debug)
+        printf("0: %d %d %d  %d\n", *blue, *green, *red, offset);
     if (sign % 2 == 0)
     {
         switch(colour)
@@ -411,16 +421,15 @@ void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
                 break;
         }
     }
-    /*
-    printf("f: %d %d %d  %d\n", *blue, *green, *red, offset);
-    */
+    if(debug)
+        printf("1: %d %d %d  %d\n", *blue, *green, *red, offset);
 }
 
 int main(void)
 {
     int password[] = {100,200,200,200,200};
     validate("index.bmp");
-    encrypt("index.bmp", password, 5);
-    decrypt("index_encrypted.bmp", password, 5);
+    encrypt("index.bmp", password, 5, 0);
+    decrypt("index_encrypted.bmp", password, 5, 0);
     return 0;
 }
