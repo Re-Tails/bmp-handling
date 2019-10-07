@@ -45,9 +45,17 @@ char* fileName(char* inName, int length)
 }
 
 /**
+ * returns 0 only if the image is compatible with the program
  * 
+ * IN: 
+ * char* inName: name of the file to check
  * 
- * 
+ * OUT:
+ * int: 
+ *  0 valid
+ *  1 could not open, invalid
+ *  2 could open but still invalid
+ *  
  * 
  **/
 int validate(char* inName)
@@ -84,9 +92,15 @@ int validate(char* inName)
 }
 
 /**
+ * encrypts the passed in image based on password
  * 
+ * IN:
+ * char* inName: filename to encrypt
+ * int pass[]: password to use
+ * int length: length of password
  * 
- * 
+ * OUT:
+ * char*: name of the encrypted file
  * 
  **/
 char* encrypt(char* inName, int pass[], int length)
@@ -151,9 +165,16 @@ char* encrypt(char* inName, int pass[], int length)
 }
 
 /**
+ * Changes the colour of a pixel during encryption
  * 
+ * IN:
+ * RGBTRIPLE* triple: the pixel to be changed
+ * int sign: uses + or -
+ * int colour: the colour value that will not change
+ * int offset: offset to be changed
  * 
- * 
+ * OUT:
+ * none
  * 
  **/
 void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
@@ -218,7 +239,15 @@ void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
 }
 
 /**
+ * decrypts the passed in image based on password
  * 
+ * IN:
+ * char* inName: filename to decrypt
+ * int pass[]: password to use
+ * int length: length of password
+ * 
+ * OUT:
+ * char*: name of the decrypted file
  * 
  * 
  * 
@@ -282,6 +311,19 @@ char* decrypt(char* inName, int pass[], int length)
     return decryptedName;
 }
 
+/**
+ * Changes the colour of a pixel during decryption
+ * 
+ * IN:
+ * RGBTRIPLE* triple: the pixel to be changed
+ * int sign: uses + or -
+ * int colour: the colour value that will not change
+ * int offset: offset to be changed
+ * 
+ * OUT:
+ * none
+ * 
+ **/
 void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset)
 {
     BYTE* blue = &(triple->rgbtBlue);
