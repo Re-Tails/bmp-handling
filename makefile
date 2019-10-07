@@ -1,24 +1,11 @@
-TARGET = handling
 LIBS = -lm
 CC = gcc
 CFLAGS = -ansi -Wall -Werror
 
-.PHONY: default all clean
-
-default: $(TARGET)
-all: default
-
-OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
 HEADERS = $(wildcard *.h)
 
-%.o: %.c $(HEADERS)
-    $(CC) $(CFLAGS) -c $< -o $@
-
-.PRECIOUS: $(TARGET) $(OBJECTS)
-
-$(TARGET): $(OBJECTS)
-    $(CC) $(OBJECTS) -ansi -Wall -Werror $(LIBS) -o $@
+handling.out: handling.c $(HEADERS)
+	$(CC) $(CFLAGS) -o $@ handling.c $(LIBS)
 
 clean:
-    -rm -f *.o
-    -rm -f $(TARGET)
+	-rm -f *.out
