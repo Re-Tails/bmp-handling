@@ -45,7 +45,7 @@ int main(void)
 {
     do
     {
-		/*to print the menu list and call functions and allow the program to run multiple instances without closing */
+        printf("which file to modify: ");
         char* inName;
         scanf("%s", inName);
         char change[14]="_encrypted.bmp";
@@ -61,8 +61,7 @@ int main(void)
         scanf("%d", &choice);
         
         if (choice == 1)
-        {			
-			/* to allow a choice to be made by user to encrypt an image */
+        {
             printf("option 1 encryption chosen");
             password(pass[50]);
             validate(inName); 
@@ -71,7 +70,6 @@ int main(void)
         }
         else if (choice == 2)
         {
-			/* to allow a choice to be made by user to decrypt an image*/
             printf("option 1 encryption chosen");
             password(pass[50]);
             validate(inName); 
@@ -79,19 +77,18 @@ int main(void)
             printf("%s created.", &outName);
         }
         
-        else if (choice ==3){
-			/* to allow a choice to be made by user to compress an image */
+        else if (choice ==3)
+        {
             printf("option 3 compression chosen");
             runLengthEncoding(inName, strcat(inName, "_compressed"));
         }
-        else if (choice ==4){
-			/* to allow a choice to be made by user to decompress an image */
+        else if (choice ==4)
+        {
             printf("option 4 decompresion chosen");
             runLengthDecoding(inName, strcat(inName, "_decompressed"));
         }
 /*
         else if (choice == 5){
-        * /* to allow a choice to be made by user to encrypt and compres an image
             printf("option 5 compresion and encryption chosen");
             inName = LoadBMP(* filename);
             password(* pass);
@@ -102,7 +99,6 @@ int main(void)
             FreeBMP(BMPIMAGE bitmapImage);
         }
         else if (choice == 6){
-        * /* to allow a choice to be made by user to decrypt and decompress
             printf("option 6 decompression and decryption chosen");
             inName = LoadBMP(* filename);
             decompress;
@@ -116,13 +112,11 @@ int main(void)
 */
         else if (choice == 7)
         {
-			/* to allow a choice to be made by user to exit the program*/
             printf("exiting");
             exit = 1;
         }
         else
         {
-			/* to alert the user if they enter an incorect value*/
             printf("invalid input");
         }
         
@@ -370,12 +364,12 @@ of password */
     
     while (error <(Length))
     {
-		/*to recive the input of user and make numerical and ensure only valid characters are used*/
-		
         printf("enter pasword using alphanumeric characters\n");
         
         scanf("%s",password);
-              
+        
+        /*printf("Point1");*/
+        
         Length = strlen(password) ; 	
         
         error = 0;
@@ -383,22 +377,18 @@ of password */
         /*printf("%d",Length);*/
         
         for (I=0; I<= (Length-1); I++){
-			
-			/* to increment I*/
     
             if (((password[I] >=48 && password[I] <=57) || (password[I] >=65 && password[I] <= 90) || (password[I] >= 97 && password[I] <= 122)) && (Length >3 && Length<=10)){
-                /* to check if each character is valid and that it is of desired lenght*/
+                /*printf("E%d", error);*/
                 error++;
                 
             };
                 
         };
-      
+        /*printf("error");*/
         if (error != (Length)){
-			
-			/*error mesage for pasword*/
         
-            printf("invalid password (cannot contain specical characters) and must be between 3 and 10 character long\n");
+            printf("invalid password (cannot contain specical characters)\n");
             
             error=0;
         };
@@ -406,17 +396,15 @@ of password */
         
         
         I=0;
-
+        
+        /*printf("NUM");*/
         for (Q=0; Q<= 50; Q++){
-			/* to make pasword 50 lenght*/
             
             NumPass[Q] = password[I];
             
             I++;
             
             if (I == Length){
-                
-                /*to make pasword restart when it reaches the end*/
                 
                 I=0;
             };	
@@ -848,3 +836,4 @@ void runLengthDecoding(char inFileName[], char outFileName[])
     }
     printf("\nDecompression Complete!!!\n");
 }
+
