@@ -52,8 +52,11 @@ int main(void)
         int choice;
         int pass[50];
         int exit = 0;
-        printf("type 1 for encryption\n\n type 2 for decryption\n\n type 3 for compression\n\n type 4 for decompresion\n\n");
-        printf("type 5 for compresion and encryption\n\n type 6 for decompresion and decryption\n\n type 7 to exit>");
+        printf("type 1 for encryption\n\
+                type 2 for decryption\n\
+                type 3 for compression\n\
+                type 4 for decompresion\n\
+                type 0 to exit>");
         
         scanf("%d", &choice);
         
