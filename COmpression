@@ -1,0 +1,156 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int a, b;
+char photo[]
+int data = 0, offset, bpp=0, w , h;
+long bmpsize=0, bmpdataoff=0;
+int** image;
+int temp=0;
+/* main code */
+int main()
+{
+	/* Read the file */
+	FILE* image_file;
+	char photo[];
+	image_file = fopen(photo, "rb");
+}
+/* Creating vaules using histogram */
+int hist[256];
+
+for (a=0;a<256; ++a)
+	hist[a]=0;
+
+for(b=0;b<w;++b)
+	for(a=0;a<h; ++a)
+		hist[image[a][b]]+=1;
+
+int nodes=0;
+for(a=0;a<256; ++a)
+	if(hist[a]!=0)
+		nodes +=1;
+
+/* Defining structure pixprob */
+struct pixprob
+{
+	int pix;
+	float prob;
+	struct pixprob *left *right;
+	char c[mcl];
+};
+/* Defining structure updater */
+struct updater
+{
+	int pix, arrloc;
+	float prob;
+};
+/* Declaring struct */
+struct pixprob* pix_prob;
+struct updater* up_dater;
+int tnodes=2*nodes-1;
+pix_prob=(struct pixprob*)malloc(sizeof(struct pixprob)*tnodes);
+up_dater=(struct updater*)malloc(sizeof(struct updater)*nodes);
+
+/* Initialising */
+b=0;
+int totpix=height*width;
+float tempprob;
+for(a=0;i<256;++a)
+{
+	if hist[a] !=0
+	{
+		up_dater[b].pix=a;
+		pix_val[b].pix=a;
+		up_dater[b].arrloc=j;
+		tempprob=hist[a]/totpix;
+		pix_prob[b].prob=tempprob;
+		up_dater[b].prob=tempprob;
+		pix_prob[b].left=NULL;
+		pix_prob[b].right=NULL;
+		pix_prob[b].code[0]='\0';
+		++b;
+	}
+}
+/* Arranging the histogram */
+struct updater tempupdater;
+
+for(a=0;a<nodes;++a)
+{
+	for(b=a+1;j<nodes;++b)
+	{
+		{
+			tempupdater=up_dater[a];
+			up_dater[a]=up_dater[b];
+			up_dater[b]=tempupdater;
+		}
+	}
+}
+
+/* Building the tree */
+float sumprob;
+int sumpix;
+int n=0, l=0;
+int newnode=nodes;
+
+
+while(n<nodes-1)
+{
+	sumprob=up_dater[nodes-n-1].prob+up_dater[nodes-n-2].prob;
+	sumpix=up_dater[nodes-n-1].pix+up_dater[nodes-n-2].pix;
+	pix_prob[newnode].pix=sumpix;
+	pix_prob[newnode].prob=sumprob;
+	pix_prob[newnode].left=&pix_prob[up_dater[nodes-n-2].arrloc];
+
+	pix_prob[newnode].right=&pix_prob[up_dater[nodes-n-1].arrloc];
+	pix_prob[newnode].code[0]='\0';
+
+	a=0;
+
+	while(sumprob<= up_dater[a].prob)
+		++a;
+	for(l=nodes; l>=0; --l)
+	{
+		if(l==a)
+		{
+			up_dater[l].pix= sumpix;
+			up_dater[l].prob=sumprob;
+			up_dater[l].arrloc=newnode;
+		}
+		else if(l>a)
+			up_dater[l]=up_dater[l-1];
+	}
+	n+=1;
+	newnode +=1;
+}
+char left='1';
+char right='0';
+int index;
+for(a=totalnodes-1;a.=nodes;--a)
+{
+	if(pix_prob[a].right !=NULL)
+	{
+		strconcat(pix_prob[a].right->code,pix_prob[a].code,right);
+	}
+	if(pix_prob[a].left !=NULL)
+	{
+		strconcat(pix_prob[a].left->code,pix_prob[a].code,left);
+	}
+}
+int pix_val;
+
+/* Changing image into a test file */
+FILE* Huffcoding =fopen("image", "wb");
+for (a=0; a<h;++a)
+	for(b=0;b<w;++b)
+	{
+		pix_val=image[a][b];
+		for(1=0;1<nodes;++1)
+			if(pix_val==pix_prob[1].pix)
+				fprintf(Huffcoding, "%s",pix_val[1].code);
+	}
+
+/* Printing code */
+printf("Huffman Code\n");
+printf("pixel values -> Code\n");
+for(a=0;a<nodes;++a)
+	printf("%d -> %s\n",pix_prob[a].pix,pix_prob[a].code);
