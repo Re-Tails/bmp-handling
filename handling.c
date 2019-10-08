@@ -1,11 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include "bmp.h"
-#include <inttypes.h>
-#include <stdint.h>
-#include <stdbool.h>
 
 struct Node_t
 {
@@ -49,7 +45,6 @@ int main(void)
 {
     do
     {
-        char* filename;
         char* inName;
         char change[14]="_encrypted.bmp";
         int choice;
@@ -61,40 +56,33 @@ int main(void)
         
         scanf("%d", &choice);
         
-        if (choice == 1){
+        if (choice == 1)
+        {
             printf("option 1 encryption chosen");
-            bitmapImage = LoadBMP(filename);
-            inName = *filename;
-            password(&pass[50]);
-            validate(&inName); 
-            encrypt(&inName, &pass[50], 50, 0);
-            filename = strcat(&inName,change);
-            SaveBMP(filename, bitmapImage);
-            FreeBMP(bitmapImage);
+            password(pass[50]);
+            validate(inName); 
+            char* outName = encrypt(inName, pass[50], 50, 0);
+            printf("%s created.", &outName);
         }
-        else if (choice ==2){
-            printf("option 2 decryption chosen");
-            bitmapImage=LoadBMP(filename);
-            password(&pass[50]);
-            inName = decrypt(pass ,&bitmapImage, 50, 0);
-            filename = strcat(inName,"_encrypted.bmp");
-            SaveBMP(filename, bitmapImage);
-            FreeBMP(bitmapImage);
+        else if (choice == 2)
+        {
+            printf("option 1 encryption chosen");
+            password(pass[50]);
+            validate(inName); 
+            char* outName = decrypt(inName, pass[50], 50, 0);
+            printf("%s created.", &outName);
         }
+        
         else if (choice ==3){
             printf("option 3 compression chosen");
-            LoadBMP(filename);
-            runLengthEncoding( inFileName[],  outFileName[]);
-            FreeBMP(bitmapImage);
+            runLengthEncoding(inName, strcat(inName, "_compressed"));
         }
         else if (choice ==4){
             printf("option 4 decompresion chosen");
-            LoadBMP(filename);
-            runLengthDecoding(inFileName[], outFileName[]);
-            SaveBMP(filename, bitmapImage);
-            FreeBMP(bitmapImage);
+            runLengthDecoding(inName, strcat(inName, "_decompressed"));
         }
-        else if (choice ==5){
+/*
+        else if (choice == 5){
             printf("option 5 compresion and encryption chosen");
             inName = LoadBMP(* filename);
             password(* pass);
@@ -104,7 +92,7 @@ int main(void)
             runLengthEncoding( inFileName[],  outFileName[]);;
             FreeBMP(BMPIMAGE bitmapImage);
         }
-        else if (choice = 6){
+        else if (choice == 6){
             printf("option 6 decompression and decryption chosen");
             inName = LoadBMP(* filename);
             decompress;
@@ -115,15 +103,19 @@ int main(void)
             SaveBMP(&filename, & bitmapImage);
             FreeBMP(&bitmapImage);
         }
-        else if (choice = 7){
+*/
+        else if (choice == 7)
+        {
             printf("exiting");
-            exit =1
+            exit = 1;
         }
-        else{
+        else
+        {
             printf("invalid input");
         }
         
-    }while(exit != 1);
+    }
+    while(exit != 1);
     return 0;
 };
 
@@ -356,16 +348,16 @@ char* fileName(char* inName, int length)
     return output;
 }
 
-void password(char* pass){
-
+void password(char* pass)
+{
 /*collect string from user make into numbers make 50 length through repetition
 of password */
     char password [10];
     
     int NumPass[50], I, Length, error, Q;
     
-    while (error <(Length)){
-    
+    while (error <(Length))
+    {
         printf("enter pasword using alphanumeric characters\n");
         
         scanf("%s",password);
@@ -616,6 +608,8 @@ void printMetaData(BMPHeader header)
     printf("N Colors: %u\n", header.nColors);
     printf("N Important Colors: %u\n", header.nImportantColors);
 }
+
+
 
 void runLengthEncoding(char inFileName[], char outFileName[])
 {

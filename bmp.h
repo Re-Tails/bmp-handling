@@ -90,3 +90,37 @@ typedef struct
     unsigned char* image;
 }
 BMPIMAGE;
+
+typedef struct __attribute__((__packed__))
+{
+    unsigned char id[2];
+    unsigned int bmpSize;
+    unsigned char reserved[4];
+    unsigned int bmpDataOff;
+    unsigned int headerSize;
+    unsigned int width;
+    unsigned int height;
+    unsigned short nColorPlanes;
+    unsigned short bpp;
+    unsigned int compression;
+    unsigned int imageSize;
+    unsigned int xRes;
+    unsigned int yRes;
+    unsigned int nColors; /* number of colors, used for compression */
+    unsigned int nImportantColors; /* used for compression */
+} BMPHeader;
+
+typedef struct __attribute__((__packed__))
+{
+    unsigned char  b;
+    unsigned char  g;
+    unsigned char  r;
+} ImageRGBPixel;
+
+typedef struct __attribute__((__packed__))
+{
+    unsigned char  runValue;
+    unsigned char  b;
+    unsigned char  g;
+    unsigned char  r;
+} CompressedRGBPixel;
