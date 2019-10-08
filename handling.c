@@ -45,10 +45,11 @@ int main(void)
 {
     do
     {
+        printf("which file to modify: ");
         char* inName;
+        scanf("%s", inName);
         char change[14]="_encrypted.bmp";
         int choice;
-        BMPIMAGE bitmapImage;
         int pass[50];
         int exit = 0;
         printf("type 1 for encryption\n\n type 2 for decryption\n\n type 3 for compression\n\n type 4 for decompresion\n\n");
@@ -73,11 +74,13 @@ int main(void)
             printf("%s created.", &outName);
         }
         
-        else if (choice ==3){
+        else if (choice ==3)
+        {
             printf("option 3 compression chosen");
             runLengthEncoding(inName, strcat(inName, "_compressed"));
         }
-        else if (choice ==4){
+        else if (choice ==4)
+        {
             printf("option 4 decompresion chosen");
             runLengthDecoding(inName, strcat(inName, "_decompressed"));
         }
