@@ -21,7 +21,7 @@ typedef uint32_t DWORD;
 typedef int32_t  LONG;
 typedef uint16_t WORD;
 
-void password(char* pass);
+void password(int pass[]);
 void compress(char* image);
 char* decrypt(char* inName, int pass[], int length, int debug);
 void decompress(char* image);
@@ -43,15 +43,15 @@ char* fileName(char* inName, int length);
 
 int main(void)
 {
-    do
-    {
+	int exit;
+	exit =0;
+        while(exit == 0) {
 		/*to print the menu list and call functions and allow the program to run multiple instances without closing */
         char* inName;
-        char change[14]="_encrypted.bmp";
+        /*char change[14]="_encrypted.bmp";*/
         int choice;
-        BMPIMAGE bitmapImage;
+        /*BMPIMAGE bitmapImage;*/
         int pass[50];
-        int exit = 0;
         printf("type 1 for encryption\n\n type 2 for decryption\n\n type 3 for compression\n\n type 4 for decompresion\n\n");
         printf("type 5 for compresion and encryption\n\n type 6 for decompresion and decryption\n\n type 7 to exit>");
         
@@ -61,18 +61,18 @@ int main(void)
         {			
 			/* to allow a choice to be made by user to encrypt an image */
             printf("option 1 encryption chosen");
-            password(pass[50]);
+            password(pass);
             validate(inName); 
-            char* outName = encrypt(inName, pass[50], 50, 0);
+            char* outName = encrypt(inName, pass, 50, 0);
             printf("%s created.", &outName);
         }
         else if (choice == 2)
         {
 			/* to allow a choice to be made by user to decrypt an image*/
             printf("option 1 encryption chosen");
-            password(pass[50]);
+            password(pass);
             validate(inName); 
-            char* outName = decrypt(inName, pass[50], 50, 0);
+            char* outName = decrypt(inName, pass, 50, 0);
             printf("%s created.", &outName);
         }
         
@@ -88,7 +88,7 @@ int main(void)
         }
 /*
         else if (choice == 5){
-        * /* to allow a choice to be made by user to encrypt and compres an image
+         to allow a choice to be made by user to encrypt and compres an image
             printf("option 5 compresion and encryption chosen");
             inName = LoadBMP(* filename);
             password(* pass);
@@ -99,7 +99,7 @@ int main(void)
             FreeBMP(BMPIMAGE bitmapImage);
         }
         else if (choice == 6){
-        * /* to allow a choice to be made by user to decrypt and decompress
+        to allow a choice to be made by user to decrypt and decompress
             printf("option 6 decompression and decryption chosen");
             inName = LoadBMP(* filename);
             decompress;
@@ -114,7 +114,7 @@ int main(void)
         else if (choice == 7)
         {
 			/* to allow a choice to be made by user to exit the program*/
-            printf("exiting");
+            printf("exiting %d", exit);
             exit = 1;
         }
         else
@@ -124,7 +124,9 @@ int main(void)
         }
         
     }
-    while(exit != 1);
+        
+    printf("%d", exit);
+    
     return 0;
 };
 
@@ -357,7 +359,7 @@ char* fileName(char* inName, int length)
     return output;
 }
 
-void password(char* pass)
+void password(int pass[])
 {
 /*collect string from user make into numbers make 50 length through repetition
 of password */
