@@ -14,8 +14,8 @@ void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
                     int debug);
 void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
                     int debug);
-char* encrypt(char* inName, int pass[], int length, int debug);
-char* decrypt(char* inName, int pass[], int length, int debug);
+char* encrypt(char* outName, char* inName, int pass[], int length, int debug);
+char* decrypt(char* outName, char* inName, int pass[], int length, int debug);
 
 /**
  * FUNCTION:
@@ -31,6 +31,7 @@ char* decrypt(char* inName, int pass[], int length, int debug);
  * need to free the strings passed back
  * 
  **/
+/*
 char* fileName(char* inName, int length)
 {
     char* output = malloc(sizeof(char) * (length - 3));
@@ -45,7 +46,7 @@ char* fileName(char* inName, int length)
     }
     return output;
 }
-
+*/
 /**
  * returns 0 only if the image is compatible with the program
  * 
@@ -106,10 +107,8 @@ int validate(char* inName)
  * char*: name of the encrypted file
  * 
  **/
-char* encrypt(char* inName, int pass[], int length, int debug)
+char* encrypt(char* outName, char* inName, int pass[], int length, int debug)
 {
-    char* outName = \
-        strcat(fileName(inName, strlen(inName) - 1), "_encrypted.bmp");
     FILE* inFileP = fopen(inName, "r");
     if (inFileP == NULL)
     {
@@ -260,10 +259,8 @@ void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
  * 
  * 
  **/
-char* decrypt(char* inName, int pass[], int length, int debug)
+char* decrypt(char* outName, char* inName, int pass[], int length, int debug)
 {
-    char* decryptedName = \
-        strcat(fileName(inName, strlen(inName)), "_decrypted.bmp");
     FILE* inFileP = fopen(inName, "r");
     if (inFileP == NULL)
     {
@@ -272,12 +269,12 @@ char* decrypt(char* inName, int pass[], int length, int debug)
     }
 
     /* create and validate FILE* output */
-    FILE* outFileP = fopen(decryptedName, "w");
+    FILE* outFileP = fopen(outName, "w");
     if (outFileP == NULL)
     {
         fclose(inFileP);
         fprintf(stderr, "Could not create %s.\n", 
-                strcat(decryptedName, "_decrypted"));
+                strcat(outName, "_decrypted"));
         return NULL;
     }
 
@@ -317,7 +314,7 @@ char* decrypt(char* inName, int pass[], int length, int debug)
     }
     fclose(inFileP);
     fclose(outFileP);
-    return decryptedName;
+    return outName;
 }
 
 /**
@@ -429,7 +426,10 @@ int main(void)
 {
     int password[] = {100,200,200,200,200};
     validate("index.bmp");
-    encrypt("index.bmp", password, 5, 0);
-    decrypt("index_encrypted.bmp", password, 5, 0);
+    
+    encrypt("index_e.bmp", "index.bmp", password, 5, 0);
+    
+    decrypt("index_e_d.bmp", "index_e.bmp", password, 5, 0);
+    
     return 0;
 }
