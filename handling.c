@@ -49,16 +49,14 @@ int main(void)
 		/*to print the menu list and call functions and allow the program to run multiple instances without closing */
         char inName[20];
         char outName[20];
-        printf("enter infile>");
+        printf("enter infile.bmp>");
         scanf("%s", inName);
-        printf("enter outfile>");
+        printf("enter outfile.bmp>");
         scanf("%s", outName);
-        /*char change[14]="_encrypted.bmp";*/
         int choice;
-        /*BMPIMAGE bitmapImage;*/
         int pass[10] = {1,2,3,4,5,6,7,8,9,10};
-        printf("type 1 for encryption\n\n type 2 for decryption\n\n type 3 for compression\n\n type 4 for decompresion\n\n");
-        printf("type 5 for compresion and encryption\n\n type 6 for decompresion and decryption\n\n type 7 to exit>");
+        printf("type 1 for encryption\n\ntype 2 for decryption\n\ntype 3 for compression\n\ntype 4 for decompresion\n\n");
+        printf("type 5 for compresion and encryption\n\ntype 6 for decompresion and decryption\n\ntype 7 to exit>");
         
         scanf("%d", &choice);
         
