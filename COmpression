@@ -5,7 +5,7 @@ int a, b;
 char photo[]
 int data = 0, offset, bpp=0, w , h;
 long bmpsize=0, bmpdataoff=0;
-int** image;
+int image;
 int temp=0;
 /* main code */
 int main()
