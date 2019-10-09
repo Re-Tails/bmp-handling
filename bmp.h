@@ -88,7 +88,7 @@ typedef struct
     BITMAPFILEHEADER bitmapFileHeader;
     BITMAPINFOHEADER bitmapInfoHeader;
     unsigned char* image;
-}
+} __attribute__((__packed__))
 BMPIMAGE;
 
 typedef struct __attribute__((__packed__))

@@ -23,11 +23,11 @@ typedef uint16_t WORD;
 
 void password(int pass[]);
 void compress(char* image);
-char* decrypt(char* inName, int pass[], int length, int debug);
+void decrypt(char* outName, char* inName, int pass[], int length, int debug);
 void decompress(char* image);
 void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, int debug);
 int validate(char* inName);
-char* encrypt(char* inName, int pass[], int length, int debug);
+void encrypt(char* outName, char* inName, int pass[], int length, int debug);
 BMPIMAGE LoadBMP(char* filename);
 void SaveBMP(char* filename, BMPIMAGE bitmapImage);
 void FreeBMP(BMPIMAGE bitmapImage);
@@ -39,15 +39,20 @@ void Print_History(struct Node_t *top);
 void runLengthEncoding(char inFileName[], char outFileName[]);
 void runLengthDecoding(char inFileName[], char outFileName[]);
 void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, int debug);
-char* fileName(char* inName, int length);
 
 int main(void)
 {
 	int exit;
-	exit =0;
-        while(exit == 0) {
+	exit = 0;
+    while(exit == 0) 
+    {
 		/*to print the menu list and call functions and allow the program to run multiple instances without closing */
-        char* inName;
+        char inName[20];
+        char outName[20];
+        printf("enter infile>");
+        scanf("%s", inName);
+        printf("enter outfile>");
+        scanf("%s", outName);
         /*char change[14]="_encrypted.bmp";*/
         int choice;
         /*BMPIMAGE bitmapImage;*/
@@ -60,31 +65,33 @@ int main(void)
         if (choice == 1)
         {			
 			/* to allow a choice to be made by user to encrypt an image */
-            printf("option 1 encryption chosen");
+            printf("option 1 encryption chosen\n");
             password(pass);
             validate(inName); 
-            char* outName = encrypt(inName, pass, 50, 0);
-            printf("%s created.", &outName);
+            encrypt(outName, inName, pass, 50, 0);
+            printf("%s created.", outName);
         }
         else if (choice == 2)
         {
 			/* to allow a choice to be made by user to decrypt an image*/
-            printf("option 1 encryption chosen");
+            printf("option 1 encryption chosen\n");
             password(pass);
             validate(inName); 
-            char* outName = decrypt(inName, pass, 50, 0);
-            printf("%s created.", &outName);
+            decrypt(outName, inName, pass, 50, 0);
+            printf("%s created.", outName);
         }
         
-        else if (choice ==3){
+        else if (choice ==3)
+        {
 			/* to allow a choice to be made by user to compress an image */
-            printf("option 3 compression chosen");
-            runLengthEncoding(inName, strcat(inName, "_compressed"));
+            printf("option 3 compression chosen\n");
+            runLengthEncoding(inName, outName);
         }
-        else if (choice ==4){
+        else if (choice ==4)
+        {
 			/* to allow a choice to be made by user to decompress an image */
-            printf("option 4 decompresion chosen");
-            runLengthDecoding(inName, strcat(inName, "_decompressed"));
+            printf("option 4 decompresion chosen\n");
+            runLengthDecoding(inName, outName);
         }
 /*
         else if (choice == 5){
@@ -114,21 +121,52 @@ int main(void)
         else if (choice == 7)
         {
 			/* to allow a choice to be made by user to exit the program*/
-            printf("exiting %d", exit);
+            printf("exiting %d\n", exit);
             exit = 1;
         }
         else
         {
 			/* to alert the user if they enter an incorect value*/
-            printf("invalid input");
+            printf("invalid input\n");
         }
         
     }
-        
     printf("%d", exit);
-    
     return 0;
 };
+
+int validate(char* inName)
+{
+    /* open and validate FILE* input */
+    FILE* inFileP = fopen(inName, "r");
+    if (inFileP == NULL)
+    {
+        fprintf(stderr, "Could not open %s.\n", inName);
+        return 1;
+    }
+
+    /* read inFileP's BITMAPFILEHEADER */
+    BITMAPFILEHEADER bf;
+    fread(&bf, sizeof(BITMAPFILEHEADER), 1, inFileP);
+
+    /* read inFileP's BITMAPINFOHEADER */
+    BITMAPINFOHEADER bi;
+    fread(&bi, sizeof(BITMAPINFOHEADER), 1, inFileP);
+
+    /* check compatibility based on MS Docs */
+    if (bf.bfType != 0x4d42 || /* BM stored in little-endian */
+        bf.bfOffBits != 54 || /* 14 + 40 */
+        bi.biSize != 40 || /* size of BITMAPINFOHEADER */
+        bi.biBitCount != 24 || /* 24-bit BMP */
+        bi.biCompression != 0) /* uncompressed */
+    {
+        fclose(inFileP);
+        fprintf(stderr, "Unsupported file format.\n");
+        return 2;
+    }
+    fclose(inFileP);
+    return 0;
+}
 
 void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
                     int debug)
@@ -193,25 +231,23 @@ void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
         printf("1: %d %d %d  %d\n", *blue, *green, *red, offset);
 }
 
-char* decrypt(char* inName, int pass[], int length, int debug)
+void decrypt(char* outName, char* inName, int pass[], int length, int debug)
 {
-    char* decryptedName = \
-        strcat(fileName(inName, strlen(inName)), "_decrypted.bmp");
     FILE* inFileP = fopen(inName, "r");
     if (inFileP == NULL)
     {
         fprintf(stderr, "Could not open %s.\n", inName);
-        return NULL;
+        return;
     }
 
     /* create and validate FILE* output */
-    FILE* outFileP = fopen(decryptedName, "w");
+    FILE* outFileP = fopen(outName, "w");
     if (outFileP == NULL)
     {
         fclose(inFileP);
         fprintf(stderr, "Could not create %s.\n", 
-                strcat(decryptedName, "_decrypted"));
-        return NULL;
+                strcat(outName, "_decrypted"));
+        return;
     }
 
     /* read inFileP's BITMAPFILEHEADER */
@@ -250,7 +286,6 @@ char* decrypt(char* inName, int pass[], int length, int debug)
     }
     fclose(inFileP);
     fclose(outFileP);
-    return decryptedName;
 }
 
 void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
@@ -344,21 +379,6 @@ void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
         printf("1: %d %d %d  %d\n", *blue, *green, *red, offset);
 }
 
-char* fileName(char* inName, int length)
-{
-    char* output = malloc(sizeof(char) * (length - 3));
-    int i;
-    for(i = 0; i < length; i++)
-    {
-        if(inName[i] == '.')
-        {
-            strncpy(output, inName, i);
-            output[i] = '\0';
-        }
-    }
-    return output;
-}
-
 void password(int pass[])
 {
 /*collect string from user make into numbers make 50 length through repetition
@@ -428,7 +448,7 @@ of password */
 
 BMPIMAGE LoadBMP(char* filename)
 {
-    scanf("%s", &filename);
+    scanf("%s", filename);
     FILE *BMP_p;
     BMPIMAGE bitmapImage;
     /*The actual picture*/
@@ -534,15 +554,13 @@ void Print_History(struct Node_t *top)
     }
 }
   
-char* encrypt(char* inName, int pass[], int length, int debug)
+void encrypt(char* outName, char* inName, int pass[], int length, int debug)
 {
-    char* outName = \
-        strcat(fileName(inName, strlen(inName) - 1), "_encrypted.bmp");
     FILE* inFileP = fopen(inName, "r");
     if (inFileP == NULL)
     {
         fprintf(stderr, "Could not open %s.\n", inName);
-        return NULL;
+        return;
     }
 
     /* create and validate FILE* output */
@@ -552,7 +570,7 @@ char* encrypt(char* inName, int pass[], int length, int debug)
         fclose(inFileP);
         fprintf(stderr, "Could not create %s.\n", 
                 strcat(outName, "_encrypted.bmp"));
-        return NULL;
+        return;
     }
 
     /* read inFileP's BITMAPFILEHEADER */
@@ -593,7 +611,6 @@ char* encrypt(char* inName, int pass[], int length, int debug)
     }
     fclose(inFileP);
     fclose(outFileP);
-    return outName;
 }
 
 void writeCompressedPixel(FILE* filePointer, unsigned char r, unsigned char g, unsigned char b, unsigned char count)
