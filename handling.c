@@ -10,10 +10,8 @@
 #define BI_COMPRESSION 0; /* uncompressed */
 
 int validate(char* inName);
-void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
-                    int debug);
-void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
-                    int debug);
+void encryptColour(RGBTRIPLE* triple, int colour, int offset, int debug);
+void decryptColour(RGBTRIPLE* triple, int colour, int offset, int debug);
 char* encrypt(char* outName, char* inName, int pass[], int length, int debug);
 char* decrypt(char* outName, char* inName, int pass[], int length, int debug);
 
@@ -150,7 +148,6 @@ char* encrypt(char* outName, char* inName, int pass[], int length, int debug)
             fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
             num += (col + row) % 50;
             encryptColour(&triple, \
-                        pass[num % length] % 2, \
                         pass[(num + 1) % length] % 3, \
                         pass[(num + 2) % length], \
                         debug);
@@ -181,66 +178,35 @@ char* encrypt(char* outName, char* inName, int pass[], int length, int debug)
  * none
  * 
  **/
-void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
-                    int debug)
+void encryptColour(RGBTRIPLE* triple, int colour, int offset, int debug)
 {
     BYTE* blue = &(triple->rgbtBlue);
     BYTE* green = &(triple->rgbtGreen);
     BYTE* red = &(triple->rgbtRed);
-    if(debug)
+    if(debug == 1)
         printf("0: %d %d %d  %d\n", *blue, *green, *red, offset);
-
-    if (sign % 2 == 0)
+    switch(colour)
     {
-        switch(colour)
-        {
-            case 0:
-                *blue = \
-                    abs(*blue - offset) % 256;
-                *green = \
-                    abs(*green + offset) % 256;
-                break;
-            case 1:
-                *green = \
-                    abs(*green - offset) % 256;
-                *red = \
-                    abs(*red + offset) % 256;
-                break;
-            case 2:
-                *red = \
-                    abs(*red - offset) % 256;
-                *blue = \
-                    abs(*blue + offset) % 256;
-                break;
-        }
+        case 0:
+            *blue = \
+                abs(*blue + offset % 256);
+            *green = \
+                abs(*green + offset) % 256;
+            break;
+        case 1:
+            *green = \
+                abs(*green + offset) % 256;
+            *red = \
+                abs(*red + offset) % 256;
+            break;
+        case 2:
+            *red = \
+                abs(*red + offset) % 256;
+            *blue = \
+                abs(*blue + offset) % 256;
+            break;
     }
-    else
-    {
-        switch(colour)
-        {
-            case 0:
-                *blue = \
-                    abs(*blue + offset) % 256;
-                *green = \
-                    abs(*green - offset) % 256;
-                break;
-            case 1:
-                /* printf("#: %d %d %d  %d\n", *blue, *green, *red, offset); */
-                *green = \
-                    abs(*green + offset) % 256;
-                *red = \
-                    abs(*red - offset) % 256;
-                /* printf("1: %d %d %d  %d\n", *blue, *green, *red, offset); */
-                break;
-            case 2:
-                *red = \
-                    abs(*red + offset) % 256;
-                *blue = \
-                    abs(*blue - offset) % 256;
-                break;
-        }
-    }
-    if(debug)
+    if(debug == 1)
         printf("1: %d %d %d  %d\n", *blue, *green, *red, offset);
 }
 
@@ -300,7 +266,6 @@ char* decrypt(char* outName, char* inName, int pass[], int length, int debug)
             fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
             num += (col + row) % 50;
             decryptColour(&triple, \
-                        pass[num % length] % 2, \
                         pass[(num + 1) % length] % 3, \
                         pass[(num + 2) % length], \
                         debug);
@@ -331,105 +296,63 @@ char* decrypt(char* outName, char* inName, int pass[], int length, int debug)
  * none
  * 
  **/
-void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
-                    int debug)
+void decryptColour(RGBTRIPLE* triple, int colour, int offset, int debug)
 {
     BYTE* blue = &(triple->rgbtBlue);
     BYTE* green = &(triple->rgbtGreen);
     BYTE* red = &(triple->rgbtRed);
-    if(debug)
+    if(debug == 1)
         printf("0: %d %d %d  %d\n", *blue, *green, *red, offset);
-    if (sign % 2 == 0)
+
+    switch(colour)
     {
-        switch(colour)
-        {
-            case 0:
-                if(offset < *blue)
-                    *blue = (*blue + offset) % 256;
-                else
-                    *blue = abs(*blue - offset) % 256;
-                if(*green - offset > 0)
-                    *green = (*green - offset) % 256;
-                else
-                    *green = abs(*green - offset + 256) % 256;
-                
-                break;
-            case 1:
-                if(offset < *green)
-                    *green = (*green + offset) % 256;
-                else
-                    *green = abs(*green - offset) % 256;
-                if(*red - offset > 0)
-                    *red = (*red - offset) % 256;
-                else
-                    *red = abs(*red - offset + 256) % 256;
-                
-                break;
-            case 2:
-                if(offset < *red)
-                    *red = (*red + offset) % 256;
-                else
-                    *red = abs(*red - offset) % 256;
-                if(*blue - offset > 0)
-                    *blue = (*blue - offset) % 256;
-                else
-                    *blue = abs(*blue - offset + 256) % 256;
-                
-                break;
-        }
+        case 0:
+            if(*blue - offset > 0)
+                *blue = *blue - offset;
+            else
+                *blue = (*blue - offset + 256) % 256;
+            if(*green - offset > 0)
+                *green = *green - offset;
+            else
+                *green = (*green - offset + 256) % 256;
+            
+            break;
+        case 1:
+            if(*green - offset > 0)
+                *green = *green - offset;
+            else
+                *green = (*green - offset + 256) % 256;
+            if(*red - offset > 0)
+                *red = *red - offset;
+            else
+                *red = (*red - offset + 256) % 256;
+            
+            break;
+        case 2:
+            if(*red - offset > 0)
+                *red = *red - offset;
+            else
+                *red = (*red - offset + 256) % 256;
+            if(*blue - offset > 0)
+                *blue = *blue - offset;
+            else
+                *blue = (*blue - offset + 256) % 256;
+            break;
     }
-    else
-    {
-        switch(colour)
-        {
-            case 0:
-                if(offset < *green)
-                    *green = (*green + offset) % 256;
-                else
-                    *green = abs(*green - offset) % 256;
-                if(*blue - offset > 0)
-                    *blue = (*blue - offset) % 256;
-                else
-                    *blue = abs(*blue - offset + 256) % 256;
-                break;
-            case 1:
-                if(offset < *red)
-                {
-                    *red = (*red + offset) % 256;
-                }
-                else
-                {
-                    *red = abs(*red - offset) % 256;
-                }
-                if(*green - offset > 0)
-                    *green = (*green - offset) % 256;
-                else
-                    *green = abs(*green - offset + 256) % 256;
-                break;
-            case 2:
-                if(offset < *blue)
-                    *blue = (*blue + offset) % 256;
-                else
-                    *blue = abs(*blue - offset) % 256;
-                if(*red - offset > 0)
-                    *red = (*red - offset) % 256;
-                else
-                    *red = abs(*red - offset + 256) % 256;
-                break;
-        }
-    }
-    if(debug)
+    if(debug == 1)
         printf("1: %d %d %d  %d\n", *blue, *green, *red, offset);
 }
 
 int main(void)
 {
-    int password[] = {100,200,200,200,200};
-    validate("index.bmp");
+    int password[] = {100,100,100,100,100};
+    validate("pointillist.bmp");
     
-    encrypt("index_e.bmp", "index.bmp", password, 5, 0);
+    encrypt("pointillist_e.bmp", "pointillist.bmp", password, 5, 0);
     
-    decrypt("index_e_d.bmp", "index_e.bmp", password, 5, 0);
+    printf("\n");
+
+    decrypt("pointillist_e_d.bmp", "pointillist_e.bmp", password, 5, 0);
     
     return 0;
 }
