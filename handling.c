@@ -56,7 +56,7 @@ int main(void)
         /*char change[14]="_encrypted.bmp";*/
         int choice;
         /*BMPIMAGE bitmapImage;*/
-        int pass[10] = {1,2,3,4,5};
+        int pass[10] = {1,2,3,4,5,6,7,8,9,10};
         printf("type 1 for encryption\n\n type 2 for decryption\n\n type 3 for compression\n\n type 4 for decompresion\n\n");
         printf("type 5 for compresion and encryption\n\n type 6 for decompresion and decryption\n\n type 7 to exit>");
         
@@ -68,7 +68,7 @@ int main(void)
             printf("option 1 encryption chosen\n");
             /* password(pass); */
             validate(inName); 
-            encrypt(outName, inName, pass, 5, 0);
+            encrypt(outName, inName, pass, 10, 0);
             printf("%s created.", outName);
         }
         else if (choice == 2)
@@ -77,7 +77,7 @@ int main(void)
             printf("option 1 encryption chosen\n");
             /* password(pass); */
             validate(inName); 
-            decrypt(outName, inName, pass, 5, 0);
+            decrypt(outName, inName, pass, 10, 0);
             printf("%s created.", outName);
         }
         
