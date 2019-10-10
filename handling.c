@@ -6,7 +6,8 @@
 struct Node_t
 {
     int data;
-    char name[20];
+    char in_name[20];
+    char out_name[20];
     struct Node_t* next;
 };
 
@@ -31,18 +32,22 @@ void encrypt(char* outName, char* inName, int pass[], int length, int debug);
 BMPIMAGE LoadBMP(char* filename);
 void SaveBMP(char* filename, BMPIMAGE bitmapImage);
 void FreeBMP(BMPIMAGE bitmapImage);
-void Save_History(struct Node_t **top, int x, char name[]);
+void Save_History(struct Node_t **top, int x, char in_name[], char out_name[]);
 int Is_Empty(struct Node_t *top);
 void Pop(struct Node_t **top);
 void Delete_History(struct Node_t **top);
 void Print_History(struct Node_t *top);
+void Print_Node(struct Node_t *top);
+void Search_Action(struct Node_t *top, int Search_Number);
+void Search_File(struct Node_t *top, char filename[]);
 void runLengthEncoding(char inFileName[], char outFileName[]);
 void runLengthDecoding(char inFileName[], char outFileName[]);
 void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, int debug);
 
 int main(void)
 {
-	int exit;
+    struct Node_t* history = NULL;
+    int exit;
 	exit = 0;
     while(exit == 0) 
     {
@@ -52,56 +57,64 @@ int main(void)
         int choice = 0;
         int pass[50] = {0};
         printf("\ntype 1 for encryption\n\ntype 2 for decryption\n\ntype 3 for compression\n\ntype 4 for decompresion\n\n");
-        printf("type 5 for compresion and encryption\n\ntype 6 for decompresion and decryption\n\ntype 7 to exit>");
+        printf("type 5 for compresion and encryption\n\ntype 6 for decompresion and decryption\n\ntype 7 to view history");
+        printf("\n\ntype 8 to exit>");
         
         scanf("%d", &choice);
         
         if (choice == 1)
         {			
-	/* to allow a choice to be made by user to encrypt an image */
-	        printf("\nenter infile.bmp>");
+        /* to allow a choice to be made by user to encrypt an image */
+            printf("\nenter infile.bmp>");
             scanf("%s", inName);
             printf("enter outfile.bmp>");
             scanf("%s", outName);
-			validate(inName);
+            validate(inName);
             printf("option 1 encryption chosen\n");
             password(pass);
-			encrypt(outName, inName, pass, 10, 0);
+            encrypt(outName, inName, pass, 10, 0);
             printf("%s created.", outName);
+            Save_History(&history, 1, inName, outName);
         }
         else if (choice == 2)
         {
-			/* to allow a choice to be made by user to decrypt an image*/
+            /* to allow a choice to be made by user to decrypt an image*/
             printf("option 1 encryption chosen\n");
-	    printf("\nenter infile.bmp>");
+        printf("\nenter infile.bmp>");
             scanf("%s", inName);
-			validate(inName);
+            validate(inName);
             printf("enter outfile.bmp>");
             scanf("%s", outName);
             password(pass); 
             decrypt(outName, inName, pass, 10, 0);
             printf("%s created.", outName);
+            Save_History(&history, 2, inName, outName);
+
         }
         
         else if (choice ==3)
         {
-			/* to allow a choice to be made by user to compress an image */
+            /* to allow a choice to be made by user to compress an image */
             printf("\nenter infile.bmp>");
             scanf("%s", inName);
             printf("enter outfile.bmp>");
             scanf("%s", outName);
             printf("option 3 compression chosen\n");
             runLengthEncoding(inName, outName);
+            Save_History(&history, 3, inName, outName);
+
         }
         else if (choice ==4)
         {
-			/* to allow a choice to be made by user to decompress an image */
-	        printf("\nenter infile.bmp>");
+            /* to allow a choice to be made by user to decompress an image */
+            printf("\nenter infile.bmp>");
             scanf("%s", inName);
             printf("enter outfile.bmp>");
             scanf("%s", outName);
             printf("option 4 decompresion chosen\n");
             runLengthDecoding(inName, outName);
+            Save_History(&history, 4, inName, outName);
+
         }
 /*
         else if (choice == 5){
@@ -114,6 +127,7 @@ int main(void)
             filename= strcat(inName,"_encrypted.bmp");
             runLengthEncoding( inFileName[],  outFileName[]);;
             FreeBMP(BMPIMAGE bitmapImage);
+            Save_History(&history, 5, inName, outName);
         }
         else if (choice == 6){
         to allow a choice to be made by user to decrypt and decompress
@@ -126,12 +140,43 @@ int main(void)
             filename= strcat(inName,"_encrypted.bmp");
             SaveBMP(&filename, & bitmapImage);
             FreeBMP(&bitmapImage);
+            Save_History(&history, 6, inName, outName);
         }
-*/
-        /*else if (choice ==7)
+*/	   
+
+        else if (choice ==7)
         {
-		HISTORY
-        }*/
+            printf("\ntype 1 to view all history\n\ntype 2 to search for action\n\n");
+            printf("type 3 to search for file\n\ntype 4 to delete history\n\ntype anything else to exit>");
+
+            scanf("%d", &choice);
+
+            if (choice==1)
+            {
+                printf("Latest action:\n");
+                Print_History(history);
+            }
+            else if (choice==2)
+            {
+                printf("\ntype 1 to show encryptions\ntype 2 to show decryptions\ntype 3 to show compressions\n");
+                printf("type 4 to show decompressions\ntype 5 to show combined encryptions and compressions\n");
+                printf("type 6 to show combined decryptions and decompressions>");
+                scanf("%d", &choice);
+                printf("Latest action:\n");
+                Search_Action(history, choice);
+            }
+            else if (choice==3)
+            {
+                printf("\nwhich file do you want to search for>");
+                scanf("%s", inName);
+                printf("Latest action:\n");
+                Search_File(history, inName);
+            }
+            else if (choice==4)
+            {
+                Delete_History(&history);
+            }
+        }
         else if (choice == 8)
         {
 			/* to allow a choice to be made by user to exit the program*/
@@ -623,20 +668,28 @@ void FreeBMP(BMPIMAGE bitmapImage)
     free(bitmapImage.image);
 }
 
-void Save_History(struct Node_t **top, int x, char name[])
+void Save_History(struct Node_t **top, int x, char inname[], char outname[])
 {
     struct Node_t* node = NULL;
     node = (struct Node_t*) malloc(sizeof(struct Node_t));
-
+    int length;
+    length = strlen(inname);
+    printf("%d\n", length);
     node->data = x;
     int i;
-    for (i = 0; i < 10; ++i)
-    {
-        if (name[i] !='.')
-        {
-            node->name[i] = name[i];
-        }
+    for (i = 0; i < length; ++i)
+    {        
+        node->in_name[i] = inname[i];
+        node->in_name[i+1] = '\0';
     }
+
+    length = strlen(outname);
+    for (i = 0; i < length; ++i)
+    {
+        node->out_name[i] = outname[i];
+        node->out_name[i+1] = '\0';
+    }
+
     node->next = *top;
     *top = node;
 } 
@@ -671,19 +724,62 @@ void Print_History(struct Node_t *top)
 {
     if (Is_Empty(top) == 0)
     {
-        switch (top->data)
+        Print_Node(top);
+        /*Call print again for the next node*/
+        if (Is_Empty(top->next) == 0)
         {
-            case 1: printf("Compressed ");
-                    break;
-            case 2: printf("Decompressed ");
-                    break;
-            case 3: printf("Encrypted ");
-                    break;
-            case 4: printf("Decrypted ");
-                    break;
+            Print_History(top->next);
         }
-        printf("%s.BMP\n", top->name);
-        Print_History(top->next);
+    }
+}
+
+/*
+*Prints a single node
+*INPUT:
+*   Node_t*: The node
+*/
+void Print_Node(struct Node_t *top)
+{
+    /*Depending on number saved, print which commando was used*/
+    switch (top->data)
+    {
+        case 1: printf("Encrypted ");
+                break;
+        case 2: printf("Decrypted ");
+                break;
+        case 3: printf("Compressed ");
+                break;
+        case 4: printf("Decompressed ");
+                break;
+        case 5: printf("Compressed and encrypted ");
+                break;
+        case 6: printf("Decompressed and decrypted ");
+                break;
+    }
+    printf("%s into %s\n", top->in_name, top->out_name);
+}
+
+void Search_Action(struct Node_t *top, int Search_Number)
+{
+    if (Is_Empty(top) == 0)
+    {
+        if (top->data == Search_Number)
+        {
+            Print_Node(top);
+        }
+        Search_Action(top->next, Search_Number);
+    }
+}
+
+void Search_File(struct Node_t *top, char filename[])
+{    
+    if (Is_Empty(top) == 0)
+    {
+        if (strcmp(top->in_name, filename) == 0 || strcmp(top->out_name, filename) == 0)
+        {
+            Print_Node(top);
+        }
+        Search_File(top->next, filename);
     }
 }
   
