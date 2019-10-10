@@ -25,7 +25,7 @@ void password(int pass[]);
 void compress(char* image);
 void decrypt(char* outName, char* inName, int pass[], int length, int debug);
 void decompress(char* image);
-void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, int debug);
+void encryptColour(RGBTRIPLE* triple, int colour, int offset, int debug);
 int validate(char* inName);
 void encrypt(char* outName, char* inName, int pass[], int length, int debug);
 BMPIMAGE LoadBMP(char* filename);
@@ -38,7 +38,7 @@ void Delete_History(struct Node_t **top);
 void Print_History(struct Node_t *top);
 void runLengthEncoding(char inFileName[], char outFileName[]);
 void runLengthDecoding(char inFileName[], char outFileName[]);
-void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, int debug);
+void decryptColour(RGBTRIPLE* triple, int colour, int offset, int debug);
 
 int main(void)
 {
@@ -52,7 +52,7 @@ int main(void)
         int choice = 0;
         int pass[50] = {0};
         printf("\ntype 1 for encryption\n\ntype 2 for decryption\n\ntype 3 for compression\n\ntype 4 for decompresion\n\n");
-        printf("type 5 for compresion and encryption\n\ntype 6 for decompresion and decryption\n\ntype 7 to exit>");
+        printf("type 5 for compresion and encryption\n\ntype 6 for decompresion and decryption\n\ntype 8 to exit>");
         
         scanf("%d", &choice);
         
@@ -72,7 +72,7 @@ int main(void)
         else if (choice == 2)
         {
 			/* to allow a choice to be made by user to decrypt an image*/
-            printf("option 1 encryption chosen\n");
+            printf("option 2 decryption chosen\n");
 	    printf("\nenter infile.bmp>");
             scanf("%s", inName);
 			validate(inName);
@@ -209,7 +209,8 @@ void encrypt(char* outName, char* inName, int pass[], int length, int debug)
     if (outFileP == NULL)
     {
         fclose(inFileP);
-        fprintf(stderr, "Could not create %s.\n", outName);
+        fprintf(stderr, "Could not create %s.\n", 
+                strcat(outName, "_encrypted.bmp"));
         return;
     }
 
@@ -237,7 +238,6 @@ void encrypt(char* outName, char* inName, int pass[], int length, int debug)
             fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
             num += (col + row) % 50;
             encryptColour(&triple, \
-                        pass[num % length] % 2, \
                         pass[(num + 1) % length] % 3, \
                         pass[(num + 2) % length], \
                         debug);
@@ -251,7 +251,6 @@ void encrypt(char* outName, char* inName, int pass[], int length, int debug)
     }
     fclose(inFileP);
     fclose(outFileP);
-    return;
 }
 
 /**
@@ -268,66 +267,35 @@ void encrypt(char* outName, char* inName, int pass[], int length, int debug)
  * none
  * 
  **/
-void encryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
-                    int debug)
+void encryptColour(RGBTRIPLE* triple, int colour, int offset, int debug)
 {
     BYTE* blue = &(triple->rgbtBlue);
     BYTE* green = &(triple->rgbtGreen);
     BYTE* red = &(triple->rgbtRed);
-    if(debug)
+    if(debug == 1)
         printf("0: %d %d %d  %d\n", *blue, *green, *red, offset);
-
-    if (sign % 2 == 0)
+    switch(colour)
     {
-        switch(colour)
-        {
-            case 0:
-                *blue = \
-                    abs(*blue - offset) % 256;
-                *green = \
-                    abs(*green + offset) % 256;
-                break;
-            case 1:
-                *green = \
-                    abs(*green - offset) % 256;
-                *red = \
-                    abs(*red + offset) % 256;
-                break;
-            case 2:
-                *red = \
-                    abs(*red - offset) % 256;
-                *blue = \
-                    abs(*blue + offset) % 256;
-                break;
-        }
+        case 0:
+            *blue = \
+                abs(*blue + offset % 256);
+            *green = \
+                abs(*green + offset) % 256;
+            break;
+        case 1:
+            *green = \
+                abs(*green + offset) % 256;
+            *red = \
+                abs(*red + offset) % 256;
+            break;
+        case 2:
+            *red = \
+                abs(*red + offset) % 256;
+            *blue = \
+                abs(*blue + offset) % 256;
+            break;
     }
-    else
-    {
-        switch(colour)
-        {
-            case 0:
-                *blue = \
-                    abs(*blue + offset) % 256;
-                *green = \
-                    abs(*green - offset) % 256;
-                break;
-            case 1:
-                /* printf("#: %d %d %d  %d\n", *blue, *green, *red, offset); */
-                *green = \
-                    abs(*green + offset) % 256;
-                *red = \
-                    abs(*red - offset) % 256;
-                /* printf("1: %d %d %d  %d\n", *blue, *green, *red, offset); */
-                break;
-            case 2:
-                *red = \
-                    abs(*red + offset) % 256;
-                *blue = \
-                    abs(*blue - offset) % 256;
-                break;
-        }
-    }
-    if(debug)
+    if(debug == 1)
         printf("1: %d %d %d  %d\n", *blue, *green, *red, offset);
 }
 
@@ -387,7 +355,6 @@ void decrypt(char* outName, char* inName, int pass[], int length, int debug)
             fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
             num += (col + row) % 50;
             decryptColour(&triple, \
-                        pass[num % length] % 2, \
                         pass[(num + 1) % length] % 3, \
                         pass[(num + 2) % length], \
                         debug);
@@ -401,7 +368,6 @@ void decrypt(char* outName, char* inName, int pass[], int length, int debug)
     }
     fclose(inFileP);
     fclose(outFileP);
-    return;
 }
 
 /**
@@ -418,94 +384,50 @@ void decrypt(char* outName, char* inName, int pass[], int length, int debug)
  * none
  * 
  **/
-void decryptColour(RGBTRIPLE* triple, int sign, int colour, int offset, \
-                    int debug)
+void decryptColour(RGBTRIPLE* triple, int colour, int offset, int debug)
 {
     BYTE* blue = &(triple->rgbtBlue);
     BYTE* green = &(triple->rgbtGreen);
     BYTE* red = &(triple->rgbtRed);
-    if(debug)
+    if(debug == 1)
         printf("0: %d %d %d  %d\n", *blue, *green, *red, offset);
-    if (sign % 2 == 0)
+
+    switch(colour)
     {
-        switch(colour)
-        {
-            case 0:
-                if(offset < *blue)
-                    *blue = (*blue + offset) % 256;
-                else
-                    *blue = abs(*blue - offset) % 256;
-                if(*green - offset > 0)
-                    *green = (*green - offset) % 256;
-                else
-                    *green = abs(*green - offset + 256) % 256;
-                
-                break;
-            case 1:
-                if(offset < *green)
-                    *green = (*green + offset) % 256;
-                else
-                    *green = abs(*green - offset) % 256;
-                if(*red - offset > 0)
-                    *red = (*red - offset) % 256;
-                else
-                    *red = abs(*red - offset + 256) % 256;
-                
-                break;
-            case 2:
-                if(offset < *red)
-                    *red = (*red + offset) % 256;
-                else
-                    *red = abs(*red - offset) % 256;
-                if(*blue - offset > 0)
-                    *blue = (*blue - offset) % 256;
-                else
-                    *blue = abs(*blue - offset + 256) % 256;
-                
-                break;
-        }
+        case 0:
+            if(*blue - offset > 0)
+                *blue = *blue - offset;
+            else
+                *blue = (*blue - offset + 256) % 256;
+            if(*green - offset > 0)
+                *green = *green - offset;
+            else
+                *green = (*green - offset + 256) % 256;
+            
+            break;
+        case 1:
+            if(*green - offset > 0)
+                *green = *green - offset;
+            else
+                *green = (*green - offset + 256) % 256;
+            if(*red - offset > 0)
+                *red = *red - offset;
+            else
+                *red = (*red - offset + 256) % 256;
+            
+            break;
+        case 2:
+            if(*red - offset > 0)
+                *red = *red - offset;
+            else
+                *red = (*red - offset + 256) % 256;
+            if(*blue - offset > 0)
+                *blue = *blue - offset;
+            else
+                *blue = (*blue - offset + 256) % 256;
+            break;
     }
-    else
-    {
-        switch(colour)
-        {
-            case 0:
-                if(offset < *green)
-                    *green = (*green + offset) % 256;
-                else
-                    *green = abs(*green - offset) % 256;
-                if(*blue - offset > 0)
-                    *blue = (*blue - offset) % 256;
-                else
-                    *blue = abs(*blue - offset + 256) % 256;
-                break;
-            case 1:
-                if(offset < *red)
-                {
-                    *red = (*red + offset) % 256;
-                }
-                else
-                {
-                    *red = abs(*red - offset) % 256;
-                }
-                if(*green - offset > 0)
-                    *green = (*green - offset) % 256;
-                else
-                    *green = abs(*green - offset + 256) % 256;
-                break;
-            case 2:
-                if(offset < *blue)
-                    *blue = (*blue + offset) % 256;
-                else
-                    *blue = abs(*blue - offset) % 256;
-                if(*red - offset > 0)
-                    *red = (*red - offset) % 256;
-                else
-                    *red = abs(*red - offset + 256) % 256;
-                break;
-        }
-    }
-    if(debug)
+    if(debug == 1)
         printf("1: %d %d %d  %d\n", *blue, *green, *red, offset);
 }
 
