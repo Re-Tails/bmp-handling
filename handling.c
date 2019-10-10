@@ -6,7 +6,7 @@
 struct Node_t
 {
     int data;
-    char name[10];
+    char name[20];
     struct Node_t* next;
 };
 
@@ -128,7 +128,11 @@ int main(void)
             FreeBMP(&bitmapImage);
         }
 */
-        else if (choice == 7)
+        /*else if (choice ==7)
+        {
+		HISTORY
+        }*/
+        else if (choice == 8)
         {
 			/* to allow a choice to be made by user to exit the program*/
             printf("exiting %d\n", exit);
