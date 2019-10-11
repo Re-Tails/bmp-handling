@@ -559,16 +559,29 @@ make 50 length through repetition of password */
         
 };
 
-
+/**
+ * Saves an element to the history
+ * 
+ * IN:
+ * struct Node_t **top: pointer to the top element of history
+ * int x: represents the users action
+ * char inname[]: name of the infile
+ * char outname[]: name of the outfile
+ * 
+ * OUT:
+ * none
+ * 
+ **/
 void Save_History(struct Node_t **top, int x, char inname[], char outname[])
 {
+    /*Initiate new node and allocate memory*/
     struct Node_t* node = NULL;
     node = (struct Node_t*) malloc(sizeof(struct Node_t));
     int length;
     length = strlen(inname);
-    printf("%d\n", length);
     node->data = x;
     int i;
+    /*Copy name of in- and out-file*/
     for (i = 0; i < length; ++i)
     {        
         node->in_name[i] = inname[i];
@@ -582,10 +595,21 @@ void Save_History(struct Node_t **top, int x, char inname[], char outname[])
         node->out_name[i+1] = '\0';
     }
 
+    /*Make the new node point to the previous top-node*/
     node->next = *top;
     *top = node;
 } 
 
+/**
+ * Checks if pointer points to an element
+ * 
+ * IN:
+ * struct Node_t *top: pointer to the top element of history
+ *
+ * OUT:
+ * int: 1 if it is empty, 0 otherwise
+ * 
+ **/
 int Is_Empty(struct Node_t *top)
 {
     if (top == NULL)
@@ -595,16 +619,40 @@ int Is_Empty(struct Node_t *top)
     return 0;
 }
 
+/**
+ * Deletes a single node, the one that was latest inserted in the history
+ * 
+ * IN:
+ * struct Node_t **top: pointer to the history
+ * 
+ * OUT:
+ * none
+ * 
+ **/
 void Pop(struct Node_t **top)
 {
+    /*Create a new node to temporarily hold the one to be deleted*/
     struct Node_t *node;
     node = *top;
+    /*Return the second node as new top node*/
     *top = (*top)->next;
+    /*Free the previous top node*/
     free(node);
 }
 
+/**
+ * Recursively deletes all elements in the history
+ * 
+ * IN:
+ * struct Node_t **top: pointer to the top element of history
+ * 
+ * OUT:
+ * none
+ * 
+ **/
 void Delete_History(struct Node_t **top)
 {
+    /*Delete until the history is empty*/
     if (Is_Empty(*top) == 0)
     {
         Pop(top);
@@ -612,6 +660,16 @@ void Delete_History(struct Node_t **top)
     }
 }
 
+/**
+ * Prints all elements in the history, starting with the latest
+ * 
+ * IN:
+ * struct Node_t **top: pointer to the top element of history
+ *
+ * OUT:
+ * none
+ * 
+ **/
 void Print_History(struct Node_t *top)
 {
     if (Is_Empty(top) == 0)
@@ -627,8 +685,11 @@ void Print_History(struct Node_t *top)
 
 /*
 *Prints a single node
-*INPUT:
-*   Node_t*: The node
+*IN:
+*   Node_t*: The node to be printed
+*
+*OUT;
+*none
 */
 void Print_Node(struct Node_t *top)
 {
@@ -647,6 +708,17 @@ void Print_Node(struct Node_t *top)
     printf("%s into %s\n", top->in_name, top->out_name);
 }
 
+/**
+ * Prints all elements matching a specific action
+ * 
+ * IN:
+ * struct Node_t **top: pointer to the top element of history
+ * int Search_Number: represents the users action
+ * 
+ * OUT:
+ * none
+ * 
+ **/
 void Search_Action(struct Node_t *top, int Search_Number)
 {
     if (Is_Empty(top) == 0)
@@ -659,10 +731,22 @@ void Search_Action(struct Node_t *top, int Search_Number)
     }
 }
 
+/**
+ * Prints all elements matching a specific file
+ * 
+ * IN:
+ * struct Node_t **top: pointer to the top element of history
+ * char filename[]: name of the file
+ * 
+ * OUT:
+ * none
+ * 
+ **/
 void Search_File(struct Node_t *top, char filename[])
 {    
     if (Is_Empty(top) == 0)
     {
+    	/*Check if filename matches*/
         if (strcmp(top->in_name, filename) == 0 ||\
             strcmp(top->out_name, filename) == 0)
         {
