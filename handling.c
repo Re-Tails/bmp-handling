@@ -11,11 +11,12 @@ struct Node_t
     struct Node_t* next;
 };
 
-#define BF_TYPE 0x4d42; /* BM stored in little-endian */
-#define BF_OFFBITS 54; /* 14 + 40 */
-#define BI_SIZE 40; /* size of BITMAPINFOHEADER */
-#define BI_BITCOUNT 24; /* 24-bit BMP */
-#define BI_COMPRESSION 0; /* uncompressed */
+#define BF_TYPE 0x4d42 /* BM stored in little-endian */
+#define BF_OFFBITS 54 /* 14 + 40 */
+#define BI_SIZE 40 /* size of BITMAPINFOHEADER */
+#define BI_BITCOUNT 24 /* 24-bit BMP */
+#define BI_COMPRESSION 0 /* uncompressed */
+#define MAX_FILENAME_LENGTH 50
 
 typedef uint8_t  BYTE;
 typedef uint32_t DWORD;
@@ -29,9 +30,6 @@ void decompress(char* image);
 void encryptColour(RGBTRIPLE* triple, int colour, int offset, int debug);
 int validate(char* inName);
 void encrypt(char* outName, char* inName, int pass[], int length, int debug);
-BMPIMAGE LoadBMP(char* filename);
-void SaveBMP(char* filename, BMPIMAGE bitmapImage);
-void FreeBMP(BMPIMAGE bitmapImage);
 void Save_History(struct Node_t **top, int x, char in_name[], char out_name[]);
 int Is_Empty(struct Node_t *top);
 void Pop(struct Node_t **top);
@@ -40,20 +38,31 @@ void Print_History(struct Node_t *top);
 void Print_Node(struct Node_t *top);
 void Search_Action(struct Node_t *top, int Search_Number);
 void Search_File(struct Node_t *top, char filename[]);
-void runLengthEncoding(char inFileName[], char outFileName[]);
-void runLengthDecoding(char inFileName[], char outFileName[]);
+void runLengthEncoding(char inFileName[], char outFileName[], int debug);
+void runLengthDecoding(char inFileName[], char outFileName[], int debug);
 void decryptColour(RGBTRIPLE* triple, int colour, int offset, int debug);
 
-int main(void)
+int main(int argc, char* argv[])
 {
     struct Node_t* history = NULL;
-    int exit;
-	exit = 0;
+    int exit = 0;
+	int debug = 0;
+    if(argc > 1)
+    {
+        if(strcmp(argv[1], "-d") == 0)
+        {
+            debug = 1;
+            printf("Debug mode enabled\n");
+            printf("USE WITH LARGE IMAGES WILL"
+                    "CAUSE LONG PROCESSING TIMES!\n");
+        }
+    }
     while(exit == 0) 
     {
-	/*to print the menu list and call functions and allow the program to run multiple instances without closing */
-        char inName[20];
-        char outName[20];
+	/*to print the menu list and call functions and 
+    allow the program to run multiple instances without closing */
+        char inName[MAX_FILENAME_LENGTH];
+        char outName[MAX_FILENAME_LENGTH];
         int choice = 0;
         int pass[50] = {0};
         printf("type 1 for encryption\n"
@@ -76,7 +85,7 @@ int main(void)
             validate(inName);
             printf("option 1 encryption chosen\n");
             password(pass);
-            encrypt(outName, inName, pass, 10, 0);
+            encrypt(outName, inName, pass, 10, debug);
             printf("%s created.\n", outName);
             Save_History(&history, 1, inName, outName);
         }
@@ -90,7 +99,7 @@ int main(void)
             printf("enter outfile.bmp>");
             scanf("%s", outName);
             password(pass); 
-            decrypt(outName, inName, pass, 10, 0);
+            decrypt(outName, inName, pass, 10, debug);
             printf("%s created.\n", outName);
             Save_History(&history, 2, inName, outName);
 
@@ -104,7 +113,7 @@ int main(void)
             scanf("%s", inName);
             printf("enter outfile.bmp>");
             scanf("%s", outName);
-            runLengthEncoding(inName, outName);
+            runLengthEncoding(inName, outName, debug);
             printf("%s created.\n", outName);
             Save_History(&history, 3, inName, outName);
         }
@@ -117,7 +126,7 @@ int main(void)
             printf("enter outfile.bmp>");
             scanf("%s", outName);
             printf("option 4 decompresion chosen\n");
-            runLengthDecoding(inName, outName);
+            runLengthDecoding(inName, outName, debug);
             printf("%s created.\n", outName);
             Save_History(&history, 4, inName, outName);
 
@@ -166,7 +175,7 @@ int main(void)
         else if (choice == 6)
         {
 			/* to allow a choice to be made by user to exit the program*/
-            printf("exiting %d\n", exit);
+            printf("exiting %s\n", argv[0]);
             exit = 1;
         }
         else
@@ -174,9 +183,7 @@ int main(void)
 			/* to alert the user if they enter an incorect value*/
             printf("invalid input\n");
         }
-        
     }
-    printf("%d", exit);
     return 0;
 };
 
@@ -478,8 +485,8 @@ void decryptColour(RGBTRIPLE* triple, int colour, int offset, int debug)
 
 void password(int pass[])
 {
-/*collect string from user make into numbers make 50 length through repetition
-of password */
+/*collect string from user make into numbers 
+make 50 length through repetition of password */
     char password [10];
     
     int I, Length, error, Q;
@@ -490,7 +497,8 @@ of password */
     
     while (error <(Length))
     {
-		/*to recive the input of user and make numerical and ensure only valid characters are used*/
+		/*to recive the input of user and make numerical and 
+        ensure only valid characters are used*/
 		
         printf("enter pasword using alphanumeric characters\n");
         
@@ -504,8 +512,13 @@ of password */
 			
 			/* to increment I*/
     
-            if (((password[I] >=48 && password[I] <=57) || (password[I] >=65 && password[I] <= 90) || (password[I] >= 97 && password[I] <= 122)) && (Length >3 && Length<=10)){
-                /* to check if each character is valid and that it is of desired lenght*/
+            if (((password[I] >=48 && password[I] <=57) || \
+                (password[I] >=65 && password[I] <= 90) || \
+                (password[I] >= 97 && password[I] <= 122)) \
+                && (Length >3 && Length<=10))
+            {
+                /* to check if each character is valid 
+                and that it is of desired length*/
                 error++;
                 
             };
@@ -516,7 +529,8 @@ of password */
 			
 			/*error mesage for pasword*/
         
-            printf("invalid password (cannot contain specical characters) and must be between 3 and 10 character long\n");
+            printf("invalid password (cannot contain specical characters)"
+                    "and must be between 4 and 10 character long\n");
             
             error=0;
         };
@@ -545,49 +559,6 @@ of password */
         
 };
 
-BMPIMAGE LoadBMP(char* filename)
-{
-    scanf("%s", filename);
-    FILE *BMP_p;
-    BMPIMAGE bitmapImage;
-    /*The actual picture*/
-
-    BMP_p = fopen(filename, "rb");
-    /*Check that file exists*/
-    if (BMP_p == NULL)
-    {
-        printf("File does not exist\n");
-    }
-    
-    fread(&bitmapImage.bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, BMP_p);
-    fread(&bitmapImage.bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, BMP_p);
-    /*Move to beginning of bits*/
-    /*fseek(BMP_p, bitmapImage->bitmapFileHeader.bfOffBits, SEEK_SET); Does not work? */
-    /*Allocate memory for the image*/
-    bitmapImage.image = (unsigned char*) malloc(bitmapImage.bitmapInfoHeader.biSizeImage);
-    /*FREE MEMORY*/
-    fread(bitmapImage.image, bitmapImage.bitmapInfoHeader.biSizeImage, 1, BMP_p);
-    fclose(BMP_p);
-    return bitmapImage;
-}
-
-void SaveBMP(char* filename, BMPIMAGE bitmapImage)
-{
-    FILE *BMP_p;
-
-    BMP_p = fopen(filename, "wb");
-
-    fwrite(&bitmapImage.bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, BMP_p);
-    fwrite(&bitmapImage.bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, BMP_p);
-    fwrite(bitmapImage.image, bitmapImage.bitmapInfoHeader.biSizeImage, 1, BMP_p);
-    
-    fclose(BMP_p);
-}
-
-void FreeBMP(BMPIMAGE bitmapImage)
-{
-    free(bitmapImage.image);
-}
 
 void Save_History(struct Node_t **top, int x, char inname[], char outname[])
 {
@@ -692,7 +663,8 @@ void Search_File(struct Node_t *top, char filename[])
 {    
     if (Is_Empty(top) == 0)
     {
-        if (strcmp(top->in_name, filename) == 0 || strcmp(top->out_name, filename) == 0)
+        if (strcmp(top->in_name, filename) == 0 ||\
+            strcmp(top->out_name, filename) == 0)
         {
             Print_Node(top);
         }
@@ -701,7 +673,8 @@ void Search_File(struct Node_t *top, char filename[])
 }
   
 
-void writeCompressedPixel(FILE* filePointer, unsigned char r, unsigned char g, unsigned char b, unsigned char count)
+void writeCompressedPixel(FILE* filePointer, unsigned char r, unsigned char g,\
+                        unsigned char b, unsigned char count)
 {
     CompressedRGBPixel temp;
     temp.r = r;
@@ -716,7 +689,8 @@ void printMetaData(BMPHeader header)
 {
     printf("BMP Id: %c%c \n", header.id[0], header.id[1]);
     printf("BMP File Size: %u bytes\n", header.bmpSize);
-    printf("Reserved: %x%x%x%x bytes\n", header.reserved[0], header.reserved[1], header.reserved[2], header.reserved[3]);
+    printf("Reserved: %x%x%x%x bytes\n", header.reserved[0],\
+            header.reserved[1], header.reserved[2], header.reserved[3]);
     printf("BMP Data Offset: %u\n", header.bmpDataOff);
     printf("Header Size: %u\n", header.headerSize);
     printf("width: %u\n", header.width);
@@ -733,7 +707,7 @@ void printMetaData(BMPHeader header)
 
 
 
-void runLengthEncoding(char inFileName[], char outFileName[])
+void runLengthEncoding(char inFileName[], char outFileName[], int debug)
 {
     int i;
     int j;
@@ -760,22 +734,30 @@ void runLengthEncoding(char inFileName[], char outFileName[])
         fseek(inImgFile, 0, SEEK_SET);
         fread(&header, sizeof(BMPHeader), 1, inImgFile);
 
-        for(i = 0; i < sizeof(BMPHeader); i++)
+        if(debug)
         {
-            printf("%x ", *(&(header.id[0])+i) & 0xff);
+            for(i = 0; i < sizeof(BMPHeader); i++)
+            {
+                printf("%x ", *(&(header.id[0])+i) & 0xff);
+            }
         }
 
         printf("\n");
-        printMetaData(header);
+        if(debug)
+            printMetaData(header);
 
         /* Calculating total number of bytes in Image Pixel Array */
-        printf("Number of Bytes Before Compression: %u\n", header.height*header.width*3);
-
+        if(debug)
+        {
+            printf("Number of Bytes Before Compression: %u\n", \
+                    header.height*header.width*3);
+        }
         /* Setting offset to start of pixel data */
         fseek(inImgFile, header.bmpDataOff, SEEK_SET);
 
        /* Allocating memory to image array as per the loaded image */
-        image = (ImageRGBPixel**)malloc(header.height * sizeof(ImageRGBPixel*));
+        image = (ImageRGBPixel**)malloc(header.height *\
+                sizeof(ImageRGBPixel*));
         if (!image)
         {
             printf("Error while allocating memory\n");
@@ -784,7 +766,8 @@ void runLengthEncoding(char inFileName[], char outFileName[])
         {
             for (i = 0; i < header.height; i++)
             {
-                image[i] = (ImageRGBPixel*)malloc(header.width * sizeof(ImageRGBPixel));
+                image[i] = (ImageRGBPixel*)malloc(header.width *\
+                            sizeof(ImageRGBPixel));
                 if (!image[i])
                 {
                     printf("Error while allocating memory\n");
@@ -800,13 +783,18 @@ void runLengthEncoding(char inFileName[], char outFileName[])
         }
 
         /* Read image pixels */
-        unsigned char padding = (((header.width * 3) % 4) == 0) ? 0 : 4- ((header.width * 3) % 4);
+        unsigned char padding;
+        if(((header.width * 3) % 4) == 0)
+            padding = 0;
+        else
+            padding = 4- ((header.width * 3) % 4);
 
         for (i = header.height-1; i >= 0; i--)
         {
             for (j = 0; j < header.width; j++)
             {
-                fread(&image[i][j], sizeof(unsigned char), sizeof(ImageRGBPixel), inImgFile);
+                fread(&image[i][j], sizeof(unsigned char), \
+                        sizeof(ImageRGBPixel), inImgFile);
             }
             fseek(inImgFile, padding, SEEK_CUR);
         }
@@ -830,13 +818,16 @@ void runLengthEncoding(char inFileName[], char outFileName[])
                         pixel_count = 1;
                         colorCount = 1;
                 }
-                else if ((image[i][j].r == current.r) && (image[i][j].g == current.g) && (image[i][j].b == current.b))
+                else if ((image[i][j].r == current.r) &&\
+                         (image[i][j].g == current.g) &&\
+                         (image[i][j].b == current.b))
                 {
                     pixel_count++;
                 }
                 else
                 {
-                    writeCompressedPixel(outImgFile, current.r, current.g, current.b, pixel_count);
+                    writeCompressedPixel(outImgFile, current.r,\
+                                        current.g, current.b, pixel_count);
                     pixel_count = 1;
                     colorCount++;
                     current = image[i][j];
@@ -844,13 +835,15 @@ void runLengthEncoding(char inFileName[], char outFileName[])
 
                 if (i == header.height - 1 && j == header.width -1)
                 {
-                    writeCompressedPixel(outImgFile, current.r, current.g, current.b, pixel_count);
+                    writeCompressedPixel(outImgFile, current.r, current.g, \
+                                        current.b, pixel_count);
                 }
             }
         }
 
         printf("Size after compression: %u \n", colorCount*4);
-        printf("Compression percentage: %f\n", 100.0*(colorCount*4)/(header.height*header.width*3));
+        printf("Compression percentage: %f\n", \
+                100.0*(colorCount*4)/(header.height*header.width*3));
 
         fseek(outImgFile, 0, SEEK_SET);
         fwrite(&header, sizeof(BMPHeader), 1, outImgFile);
@@ -866,7 +859,7 @@ void runLengthEncoding(char inFileName[], char outFileName[])
     printf("\nCompression Complete!!!\n");
 }
 
-void runLengthDecoding(char inFileName[], char outFileName[])
+void runLengthDecoding(char inFileName[], char outFileName[], int debug)
 {
     /* Header Variables */
     int i;
@@ -893,15 +886,17 @@ void runLengthDecoding(char inFileName[], char outFileName[])
         /* Reading the file */
         fseek(inImgFile, 0, SEEK_SET);
         fread(&header, sizeof(BMPHeader), 1, inImgFile);
-
-        printMetaData(header);
+        if(debug)
+            printMetaData(header);
 
         fseek(inImgFile, sizeof(BMPHeader), SEEK_SET);
         fread(&colorCount, sizeof(unsigned int), 1, inImgFile);
-        printf("Color Count: %u\n", colorCount);
+        if(debug)
+            printf("Color Count: %u\n", colorCount);
 
        /* Allocating memory to image array as per the loaded image */
-        compressedImage = (ImageRGBPixel*)malloc(header.width*header.height * sizeof(ImageRGBPixel));
+        compressedImage = (ImageRGBPixel*)malloc(header.width * header.height\
+                            * sizeof(ImageRGBPixel));
         if (!compressedImage)
         {
             printf("Error while allocating memory\n");
@@ -919,7 +914,8 @@ void runLengthDecoding(char inFileName[], char outFileName[])
         for (i = 0; i < colorCount; i++)
         {
             CompressedRGBPixel temp_compressed;
-            fread(&temp_compressed, sizeof(unsigned char), sizeof(CompressedRGBPixel), inImgFile);
+            fread(&temp_compressed, sizeof(unsigned char),\
+                    sizeof(CompressedRGBPixel), inImgFile);
 
             for (j = 0; j < temp_compressed.runValue; j++)
             {
@@ -933,12 +929,17 @@ void runLengthDecoding(char inFileName[], char outFileName[])
         fwrite(&header, sizeof(BMPHeader), 1, outImgFile);
 
         unsigned char pad = 0;
-        unsigned char padding = (((header.width * 3) % 4) == 0) ? 0 : 4- ((header.width * 3) % 4);
+        unsigned char padding;
+        if(((header.width * 3) % 4) == 0)
+            padding = 0;
+        else
+            padding = 4- ((header.width * 3) % 4);
         for (i = header.height-1; i >= 0; i--)
         {
             for (j = 0; j < header.width; j++)
             {
-                fwrite(&compressedImage[(i*header.width)+j], sizeof(unsigned char), sizeof(ImageRGBPixel), outImgFile);
+                fwrite(&compressedImage[(i*header.width)+j], \
+                    sizeof(unsigned char), sizeof(ImageRGBPixel), outImgFile);
             }
             for (j = 0; j < padding; j++) {
                 fwrite(&pad, sizeof(unsigned char), 1, outImgFile);
