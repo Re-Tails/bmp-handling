@@ -672,10 +672,6 @@ void Print_Node(struct Node_t *top)
                 break;
         case 4: printf("Decompressed ");
                 break;
-        case 5: printf("Compressed and encrypted ");
-                break;
-        case 6: printf("Decompressed and decrypted ");
-                break;
     }
     printf("%s into %s\n", top->in_name, top->out_name);
 }
