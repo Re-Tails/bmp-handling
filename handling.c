@@ -56,16 +56,20 @@ int main(void)
         char outName[20];
         int choice = 0;
         int pass[50] = {0};
-        printf("\ntype 1 for encryption\n\ntype 2 for decryption\n\ntype 3 for compression\n\ntype 4 for decompresion\n\n");
-        printf("type 5 for compresion and encryption\n\ntype 6 for decompresion and decryption\n\ntype 7 to view history");
-        printf("\n\ntype 8 to exit>");
+        printf("type 1 for encryption\n"
+                "type 2 for decryption\n"
+                "type 3 for compression\n"
+                "type 4 for decompresion\n"
+                "type 5 to view history\n"
+                "type 6 to exit\n>");
         
         scanf("%d", &choice);
         
         if (choice == 1)
         {			
         /* to allow a choice to be made by user to encrypt an image */
-            printf("\nenter infile.bmp>");
+            printf("option 1 encryption chosen\n");
+            printf("enter infile.bmp>");
             scanf("%s", inName);
             printf("enter outfile.bmp>");
             scanf("%s", outName);
@@ -73,81 +77,61 @@ int main(void)
             printf("option 1 encryption chosen\n");
             password(pass);
             encrypt(outName, inName, pass, 10, 0);
-            printf("%s created.", outName);
+            printf("%s created.\n", outName);
             Save_History(&history, 1, inName, outName);
         }
         else if (choice == 2)
         {
 			/* to allow a choice to be made by user to decrypt an image*/
             printf("option 2 decryption chosen\n");
-	    printf("\nenter infile.bmp>");
+	        printf("enter infile.bmp>");
             scanf("%s", inName);
             validate(inName);
             printf("enter outfile.bmp>");
             scanf("%s", outName);
             password(pass); 
             decrypt(outName, inName, pass, 10, 0);
-            printf("%s created.", outName);
+            printf("%s created.\n", outName);
             Save_History(&history, 2, inName, outName);
 
         }
         
-        else if (choice ==3)
+        else if (choice == 3)
         {
             /* to allow a choice to be made by user to compress an image */
-            printf("\nenter infile.bmp>");
+            printf("option 3 compression chosen\n");
+            printf("enter infile.bmp>");
             scanf("%s", inName);
             printf("enter outfile.bmp>");
             scanf("%s", outName);
-            printf("option 3 compression chosen\n");
             runLengthEncoding(inName, outName);
+            printf("%s created.\n", outName);
             Save_History(&history, 3, inName, outName);
-
         }
-        else if (choice ==4)
+        else if (choice == 4)
         {
             /* to allow a choice to be made by user to decompress an image */
-            printf("\nenter infile.bmp>");
+            printf("option 4 decompression chosen\n");
+            printf("enter infile.bmp>");
             scanf("%s", inName);
             printf("enter outfile.bmp>");
             scanf("%s", outName);
             printf("option 4 decompresion chosen\n");
             runLengthDecoding(inName, outName);
+            printf("%s created.\n", outName);
             Save_History(&history, 4, inName, outName);
 
         }
-/*
-        else if (choice == 5){
-         to allow a choice to be made by user to encrypt and compres an image
-            printf("option 5 compresion and encryption chosen");
-            inName = LoadBMP(* filename);
-            password(* pass);
-            validate(* inName);
-            inName= encrypt(&inName, &pass[50]);
-            filename= strcat(inName,"_encrypted.bmp");
-            runLengthEncoding( inFileName[],  outFileName[]);;
-            FreeBMP(BMPIMAGE bitmapImage);
-            Save_History(&history, 5, inName, outName);
-        }
-        else if (choice == 6){
-        to allow a choice to be made by user to decrypt and decompress
-            printf("option 6 decompression and decryption chosen");
-            inName = LoadBMP(* filename);
-            decompress;
-            password(* pass);
-            validate(* inName);
-            inName = decrypt;
-            filename= strcat(inName,"_encrypted.bmp");
-            SaveBMP(&filename, & bitmapImage);
-            FreeBMP(&bitmapImage);
-            Save_History(&history, 6, inName, outName);
-        }
-*/	   
 
-        else if (choice ==7)
+        else if (choice == 5)
         {
-            printf("\ntype 1 to view all history\n\ntype 2 to search for action\n\n");
-            printf("type 3 to search for file\n\ntype 4 to delete history\n\ntype anything else to exit>");
+            /* allow user to access the history functinality */
+            printf("type 1 to view all history\n"
+                    "type 2 to search for action\n"
+                    "type 3 to search for file\n"
+                    "type 4 to delete history\n"
+                    "type anything else to exit\n"
+                    ">");
 
             scanf("%d", &choice);
 
@@ -158,16 +142,18 @@ int main(void)
             }
             else if (choice==2)
             {
-                printf("\ntype 1 to show encryptions\ntype 2 to show decryptions\ntype 3 to show compressions\n");
-                printf("type 4 to show decompressions\ntype 5 to show combined encryptions and compressions\n");
-                printf("type 6 to show combined decryptions and decompressions>");
+                printf("type 1 to show encryptions\n"
+                        "type 2 to show decryptions\n"
+                        "type 3 to show compressions\n"
+                        "type 4 to show decompressions\n"
+                        ">");
                 scanf("%d", &choice);
                 printf("Latest action:\n");
                 Search_Action(history, choice);
             }
             else if (choice==3)
             {
-                printf("\nwhich file do you want to search for>");
+                printf("which file do you want to search for>");
                 scanf("%s", inName);
                 printf("Latest action:\n");
                 Search_File(history, inName);
@@ -177,7 +163,7 @@ int main(void)
                 Delete_History(&history);
             }
         }
-        else if (choice == 8)
+        else if (choice == 6)
         {
 			/* to allow a choice to be made by user to exit the program*/
             printf("exiting %d\n", exit);
@@ -276,18 +262,24 @@ void encrypt(char* outName, char* inName, int pass[], int length, int debug)
     int num = 0;
     int biHeight = abs(bi.biHeight);
     int nPad = (4 - bi.biWidth * sizeof(RGBTRIPLE)) % 4;
+    /* run through each pixel row in the image */
     for(row = 0; row < biHeight; row++)
     {
+        /* run through each pixel in the row */
         for(col = 0; col < bi.biWidth; col++)
         {
+            /* pass the pixel into triple struct */
             fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
             num += (col + row) % 50;
+            /* change the colour of the pixel - encrypt */
             encryptColour(&triple, \
                         pass[(num + 1) % length] % 3, \
                         pass[(num + 2) % length], \
                         debug);
+            /* pass the processed ixel back into the new image */
             fwrite(&triple, sizeof(RGBTRIPLE), 1, outFileP);
         }
+        /* handle padding bytes in most BMPs */
         fseek(inFileP, nPad, SEEK_CUR);
         for(pad = 0; pad < nPad; pad++)
         {
@@ -319,6 +311,7 @@ void encryptColour(RGBTRIPLE* triple, int colour, int offset, int debug)
     BYTE* red = &(triple->rgbtRed);
     if(debug == 1)
         printf("0: %d %d %d  %d\n", *blue, *green, *red, offset);
+    /* colour value decides which colour value is kept the same */
     switch(colour)
     {
         case 0:
@@ -393,18 +386,24 @@ void decrypt(char* outName, char* inName, int pass[], int length, int debug)
     int num = 0;
     int biHeight = abs(bi.biHeight);
     int nPad = (4 - bi.biWidth * sizeof(RGBTRIPLE)) % 4;
+    /* run through each pixel row in the image */
     for(row = 0; row < biHeight; row++)
     {
+        /* run through each pixel in the row */
         for(col = 0; col < bi.biWidth; col++)
         {
+            /* pass the pixel into triple struct */
             fread(&triple, sizeof(RGBTRIPLE), 1, inFileP);
             num += (col + row) % 50;
+            /* change the colour of the pixel - decrypt */
             decryptColour(&triple, \
                         pass[(num + 1) % length] % 3, \
                         pass[(num + 2) % length], \
                         debug);
+            /* pass the processed ixel back into the new image */
             fwrite(&triple, sizeof(RGBTRIPLE), 1, outFileP);
         }
+        /* handle padding bytes in most BMPs */
         fseek(inFileP, nPad, SEEK_CUR);
         for(pad = 0; pad < nPad; pad++)
         {
@@ -436,7 +435,7 @@ void decryptColour(RGBTRIPLE* triple, int colour, int offset, int debug)
     BYTE* red = &(triple->rgbtRed);
     if(debug == 1)
         printf("0: %d %d %d  %d\n", *blue, *green, *red, offset);
-
+    /* colour value decides which colour value is kept the same */
     switch(colour)
     {
         case 0:
