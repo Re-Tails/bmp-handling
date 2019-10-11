@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h> /*printf, scanf,fopen, fclose, fprintf*/
+#include <stdlib.h> /* malloc, free*/
+#include <string.h> /* strcat, strlen*/
 #include "bmp.h"
 
 struct Node_t
